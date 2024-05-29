@@ -69,6 +69,7 @@ public class Battleship{
 
     public static char[][] load_file(String save_path, int load_choice){
         //variables
+        boolean finished_loading = false;
         char[][] array_data;
         String file_line = "";
 
@@ -81,27 +82,36 @@ public class Battleship{
 
             //begin reading from file
             file_line = reader.readLine();
+            //choose which data to return based on choice
             switch(load_choice) {
-              case(PLAYER_BOARD):
-                  while(file_line != null){
-                      if(file_line != )
-                      file_line = reader.readLine();
-                  }
-                  break;
-              case(CPU_BOARD):
-                  
-                  break;
-              case(PLAYER_SHOTS):
-                  
-                  break;
-              case(CPU_SHOTS):
-                  
-                  break;
-              default():
-                  System.out.println("Load choice out of bounds.");
-                  break;
+                case(PLAYER_BOARD):
+                    while(!finished_loading){
+                        if(file_line.equals("Player ships:")){
+                            file_line = reader.readLine(); //go to next row
+                            for(int i = 0; i < SIZE; i++){
+                                array_data[i] = file_line.toCharArray();
+                            }
+                            //end loop after array_data is filled with save data
+                            finished_loading = true;
+                        } else {
+                            file_line = reader.readLine();
+                        }
+                    }
+                    break;
+                case(CPU_BOARD):
+                    
+                    break;
+                case(PLAYER_SHOTS):
+                    
+                    break;
+                case(CPU_SHOTS):
+                    
+                    break;
+                default():
+                    System.out.println("Load choice out of bounds.");
+                    break;
             }
-            return 
+            return array_data;
         } catch (IOException e) {
             System.out.println("Error accessing save file.");
             System.out.println(e);
