@@ -88,11 +88,13 @@ public class Battleship{
                 scanner.nextLine(); //remove newline from input stream
 
                 switch(user_choice) {
-                    //set all 
+                    //new game
                     case 1:
                         reset_boards(player_board, cpu_board, player_shots, cpu_shots);
+                        game_running = true;
                         choosing_settings = false;
                         break;
+                    //load game
                     case 2:
                         System.out.println("Enter the save file name (with .txt):");
                         save_path = scan.nextLine();
@@ -103,11 +105,18 @@ public class Battleship{
                         cpu_board = load_file(save_path, CPU_BOARD);
                         player_shots = load_file(save_path, PLAYER_SHOTS);
                         cpu_shots = load_file(save_path, CPU_SHOTS);
+                        
+                        //start game if all boards have data
+                        if(player_board && cpu_board && player_shots && cpu_shots){
+                            game_running = true;
+                        }
                         choosing_settings = false;
                         break;
+                    //show instructions
                     case 3:
                         print_instructions();
                         break;
+                    //quit program
                     case 4:
                         System.out.println("Exiting program...");
                         program_running = false;
@@ -115,16 +124,15 @@ public class Battleship{
                 }
             } while (choosing_settings);
 
-            //start game if all boards have data
-            if(player_board && cpu_board && player_shots && cpu_shots){
-                game_running = true;
-            }
-
             //game loop
             while(game_running) {
+                //print boards visible to the player
                 print_board(player_board);
-                print_board(cpu_board);
+                print_board(player_shots);
                 valid_choice = false;
+
+                //
+                System.out.println("Your turn:");
                 do{
                     try{
                         System.out.print(" > ");
@@ -136,6 +144,9 @@ public class Battleship{
                         
                     }
                 } while(!valid_choice);
+                
+                System.out.println("Computer's turn:");
+                
             }
         
             //save_file(save_path, player_board, cpu_board, player_shots, cpu_shots);
