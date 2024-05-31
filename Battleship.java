@@ -49,9 +49,11 @@ public class Battleship{
 
         //variables
         boolean program_running = false;
-        boolean choosing_settings = false;
+        boolean in_menu = false;
+        boolean in_quit_menu = false;
         boolean game_running = false;
-        boolean valid_choice = false;
+        boolean invalid_choice = false;
+        boolean player_turn_passed = false;
         char[][] player_board = new char[SIZE][SIZE];
         char[][] cpu_board = new char[SIZE][SIZE];
         char[][] player_shots = new char[SIZE][SIZE];
@@ -59,23 +61,20 @@ public class Battleship{
         int difficulty = 0; //0 default, 1 easy, 2 normal, 3 hard
         String save_path = "";
         String user_choice = "";
-
-        //title
-        System.out.println("BATTLESHIP GAME by Mansour");
-        System.out.println();
         
         program_running = true;
         
         //outer program loop
         while(program_running){
-            choosing_settings = true;
+            //enter menu on program loop start
+            in_menu = true;
             
             //display options for game
+            System.out.println("BATTLESHIP GAME by Mansour");
             System.out.println("< 1 > Start a new game");
             System.out.println("< 2 > Load an old game");
             System.out.println("< 3 > Show instructions");
             System.out.println("< 4 > Quit program");
-            System.out.println(); //blank line
 
             //read user choice for game, loop if invalid input or showing instructions
             do{
@@ -83,46 +82,48 @@ public class Battleship{
                 user_choice = scan.nextLine();
                 System.out.println(); //blank line
 
-                switch(user_choice) {
-                    //new game
-                    case "1":
-                        reset_boards(player_board, cpu_board, player_shots, cpu_shots);
-                        game_running = true;
-                        choosing_settings = false;
-                        break;
-                    //load game
-                    case "2":
-                        System.out.println("Enter the save file name (with .txt):");
-                        save_path = scan.nextLine();
-                        System.out.println(); //blank line
+                //new game
+                //if statement instead of switch for string because of school java version
+                if (user_choice.equals("1")) {
+                    reset_boards(player_board, cpu_board, player_shots, cpu_shots);
+                    game_running = true;
+                    in_menu = false;
+                } 
+                //load game
+                else if (user_choice.equals("2")) { 
+                    System.out.println("Enter the save file name (with .txt):");
+                    save_path = scan.nextLine();
+                    System.out.println(); //blank line
 
-                        //load game information
-                        player_board = load_file(save_path, PLAYER_BOARD);
-                        cpu_board = load_file(save_path, CPU_BOARD);
-                        player_shots = load_file(save_path, PLAYER_SHOTS);
-                        cpu_shots = load_file(save_path, CPU_SHOTS);
+                    //load game information
+                    player_board = load_file(save_path, PLAYER_BOARD);
+                    cpu_board = load_file(save_path, CPU_BOARD);
+                    player_shots = load_file(save_path, PLAYER_SHOTS);
+                    cpu_shots = load_file(save_path, CPU_SHOTS);
                         
-                        //start game if all boards have data
-                        if(is_loaded(player_board) && is_loaded(cpu_board) && is_loaded(player_shots) && is_loaded(cpu_shots)){
-                            game_running = true;
-                        }
-                        choosing_settings = false;
-                        break;
-                    //show instructions
-                    case "3":
-                        print_instructions();
-                        break;
-                    //quit program
-                    case "4":
-                        System.out.println("Exiting program...");
-                        program_running = false;
-                        choosing_settings = false;
-                    default:
-                        System.out.println("Invalid input. Please enter a number between 1 and 4.");
-                        System.out.println(); //blank line
-                        break;
+                    //start game if all boards have data
+                    if(is_loaded(player_board) && is_loaded(cpu_board) && is_loaded(player_shots) && is_loaded(cpu_shots)){
+                        System.out.println("Game successfully loaded.");
+                        game_running = true;
+                    }
+                    in_menu = false;
+                } 
+                //show instructions
+                else if (user_choice.equals("3")){
+                    print_instructions();
                 }
-            } while (choosing_settings);
+                //quit program
+                else if (user_choice.equals("4")){
+                    System.out.println("Exiting program...");
+                    program_running = false;
+                    in_menu = false;
+                }
+                //invalid input
+                else{
+                    System.out.println("Invalid input. Please enter a number between 1 and 4.");
+                    System.out.println(); //blank line
+                }
+            } while (in_menu);
             System.out.println(); //blank line
 
             //game loop
@@ -132,32 +133,101 @@ public class Battleship{
                 print_board(player_shots);
                 System.out.println(); //blank line
 
-                valid_choice = false;
+                player_turn_passed = false;
+                invalid_choice = false;
 
                 //player's turn
                 System.out.println("Your turn:");
                 System.out.println("< 1 > Shoot");
                 System.out.println("< 2 > Save game");
                 System.out.println("< 3 > Quit game and return to main menu");
+                
                 do{
                     System.out.print(" > ");
                     user_choice = scan.nextLine();
-
-
-                } while(!valid_choice);
+                    System.out.println(); //blank line
+                    
+                    //shoot
+                    if(user_choice.equals("1")){
+                        //player_shoot();
+                        player_turn_passed = true;
+                    }
+                    //save game
+                    else if(user_choice.equals("2")){
+                        //save_game(save_path, player_board, cpu_board, player_shots, cpu_shots);
+                        player_turn_passed = true;
+                    }
+                    //quit game and return to main menu
+                    else if(user_choice.equals("3")){
+                        in_quit_menu = true;
+                        
+                        System.out.println("Quit game and return to main menu:");
+                        System.out.println("< 1 > Save and quit");
+                        System.out.println("< 2 > Quit without saving");
+                        System.out.println("< 3 > Cancel");
+                        System.out.println(); //blank line
+                        
+                        do{
+                            System.out.print(" > ");
+                            user_choice = scan.nextLine();
+                            System.out.println(); //blank line
+                            
+                            //save and quit
+                            if(user_choice.equals("1")){
+                                System.out.println("Saving...");
+                                //save_game(save_path, player_board, cpu_board, player_shots, cpu_shots);
+                                System.out.println("Exiting to main menu...");
+                                System.out.println(); //blank line
+                                in_quit_menu = false;
+                                game_running = false;
+                            }
+                            //quit without saving
+                            else if(user_choice.equals("2")){
+                                System.out.println("Are you sure you want to exit to the main menu?");
+                                System.out.println("All unsaved progress will be lost.");
+                                System.out.println(); //blank line
+                                System.out.println("< Y > Exit ");
+                                System.out.println("Press any other key to cancel");
+                                System.out.println(); //blank line
+                                System.out.print(" > ");
+                                user_choice = scan.nextLine();
+                                
+                                //exit if the user typed Y or y
+                                if((user_choice.toLowerCase()).equals("Y")){
+                                    System.out.println("Exiting to main menu...");
+                                    System.out.println(); //blank line
+                                    in_quit_menu = false;
+                                    game_running = false;
+                                }
+                            }
+                            //cancel
+                            else if(user_choice.equals("3")){
+                                System.out.println();
+                                in_quit_menu = false;
+                            }
+                            //invalid input
+                            else {
+                                System.out.println("Invalid input. Please enter a number between 1 and 3.");
+                            }
+                        } while(in_quit_menu);
+                    } else {
+                        //invalid choice if user_choice does not match any option
+                        System.out.println("Invalid input. Please enter a number between 1 and 4.");
+                        invalid_choice = true;
+                    }
+                } while(invalid_choice);
                 
-                //computer's turn
-                System.out.println("Computer's turn:");
-                //cpu_turn();
+                //computer's turn, plays if the player succesfully completes their turn
+                if(player_turn_passed){
+                    System.out.println("Computer's turn:");
+                    System.out.println(" --- ");
+                    System.out.println(); //blank line
+                    //cpu_turn();
+                }
             }
-
-            //close Scanner
-            scan.close();
-        
-            //save_file(save_path, player_board, cpu_board, player_shots, cpu_shots);
         }
     }
-
+    
     /*
     Method:
     load_file
@@ -262,8 +332,7 @@ public class Battleship{
             //close BufferedReader
             reader.close();
         } catch (IOException e) {
-            System.out.println("Error accessing save file.");
-            System.out.println(); //blank line
+            System.out.println("Error accessing save file:");
             System.out.println(e);
         }
         
@@ -273,7 +342,7 @@ public class Battleship{
 
     /*
     Method:
-    save_file
+    save_game
     -----
     Parameters:
     String save_path - the file path for the save
@@ -289,7 +358,7 @@ public class Battleship{
     
     */
     /*
-    public static void save_file(String save_path, char[][] p_board, char[][] c_board, char[][] p_shots, char[][] c_shots){
+    public static void save_game(String save_path, char[][] p_board, char[][] c_board, char[][] p_shots, char[][] c_shots){
         //create BufferedWriter writing to save.txt
         try{
             BufferedWriter writer = new BufferedWriter(new FileWriter(save_path));
@@ -345,18 +414,19 @@ public class Battleship{
     boolean is_valid - the true or false value for if the data loaded correctly or not
     -----
     Description:
-    This method checks and returns whether or not the array passed to it has any null (blank) cells and if it's the size it should be.
+    This method checks and returns whether or not the array passed to it has any null cells (which is 0 for char) and if it's not the size it should be.
     */
     public static boolean is_loaded(char[][] array_data){
-        boolean is_valid = false;
+        boolean is_valid = true;
 
-        //check if each row in array_data is non-empty
-        for (int i = 0; i < array_data.length; i++) {
-            if (array_data[i] == null || array_data[i].length != SIZE) {
-                is_valid = false;
+        //check if any cell is a null
+        for (int i = 0; i<SIZE; i++){
+            for(int j = 0; j<SIZE; j++){
+                if (array_data[i][j] == 0 || array_data[i].length != SIZE) {
+                    is_valid = false;
+                }
             }
         }
-        is_valid = true;
 
         return is_valid;
     }
