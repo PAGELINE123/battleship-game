@@ -94,6 +94,7 @@ public class Battleship{
                     save_path = new_save_path();
                     System.out.println(); //blank line
 
+                    System.out.println("Loading game...");
                     //load game information
                     player_board = load_file(save_path, PLAYER_BOARD);
                     cpu_board = load_file(save_path, CPU_BOARD);
@@ -105,6 +106,10 @@ public class Battleship{
                         System.out.println("Game successfully loaded.");
                         game_running = true;
                         in_menu = false;
+                    } else {
+                        System.out.println("Error loading from \""+save_path+"\".");
+                        System.out.println("Please check if the file is in the same directory, has complete data, and is not empty.");
+                        System.out.println(); //blank line
                     }
                 } 
                 //show instructions
@@ -120,11 +125,11 @@ public class Battleship{
                 //invalid input
                 else{
                     System.out.println("Invalid input. Please enter a number between 1 and 4.");
-                    System.out.println(); //blank line
                 }
             } while (in_menu);
             System.out.println(); //blank line
 
+            //get save file path
             if(game_running){
                 System.out.println("Enter the name of the file to save to.");
                 save_path = new_save_path();
@@ -172,7 +177,6 @@ public class Battleship{
                         System.out.println("< 1 > Save and quit");
                         System.out.println("< 2 > Quit without saving");
                         System.out.println("< 3 > Cancel");
-                        System.out.println(); //blank line
                         
                         do{
                             System.out.print(" > ");
@@ -195,19 +199,18 @@ public class Battleship{
                                 System.out.println("All unsaved progress will be lost.");
                                 System.out.println(); //blank line
                                 System.out.println("< Y > Exit ");
-                                System.out.println("Press any other key to cancel");
-                                System.out.println(); //blank line
+                                System.out.println("Enter any other key to cancel");
                                 
                                 System.out.print(" > ");
                                 user_choice = scan.nextLine();
-                                
+
                                 //exit if the user typed Y or y
-                                if((user_choice.toLowerCase()).equals("Y")){
+                                if((user_choice.toLowerCase()).equals("y")){
                                     System.out.println("Exiting to main menu...");
-                                    System.out.println(); //blank line
-                                    in_quit_menu = false;
                                     game_running = false;
                                 }
+                                in_quit_menu = false;
+                                System.out.println(); //blank line
                             }
                             //cancel
                             else if(user_choice.equals("3")){
@@ -251,13 +254,12 @@ public class Battleship{
     Description:
     This method reads from the save file, and uses a switch statement to determine what data to read and return.
     If the choice for load_file is the CPU’s shots, load_file reads the save file until it encounters “CPU shots:”.
-    From there, it reads the next lines a number of times equal to the board size, and uses String.toCharArray()
-    to fill each row of the char array array_data.
+    From there, it fills each row with a nested for-loop.
     Finally, array_data is returned. 
     */
     public static char[][] load_file(String save_path, int load_choice){
         //variables
-        boolean finished_loading = false;
+        boolean ready_to_load = false;
         char[][] array_data;
         String file_line = "";
 
@@ -271,71 +273,59 @@ public class Battleship{
             //begin reading from file
             file_line = reader.readLine();
             //choose which data to return based on choice
-            switch(load_choice) {
-                case(PLAYER_BOARD):
-                    while(!finished_loading){
+            while(!ready_to_load && file_line != null){
+                switch(load_choice) {
+                    case(PLAYER_BOARD):
                         if(file_line.equals("Player ships:")){
-                            file_line = reader.readLine(); //go to next row
-                            for(int i = 0; i < SIZE; i++){
-                                array_data[i] = file_line.toCharArray();
-                                file_line = reader.readLine();
-                            }
-                            //end loop after array_data is filled with save data
-                            finished_loading = true;
+                            ready_to_load = true;
                         } else {
                             file_line = reader.readLine();
                         }
-                    }
-                    break;
-                case(CPU_BOARD):
-                   while(!finished_loading){
+                        break;
+                    case(CPU_BOARD):
                         if(file_line.equals("CPU ships:")){
-                            file_line = reader.readLine(); //go to next row
-                            for(int i = 0; i < SIZE; i++){
-                                array_data[i] = file_line.toCharArray();
-                                file_line = reader.readLine();
-                            }
-                            //end loop after array_data is filled with save data
-                            finished_loading = true;
+                            ready_to_load = true;
                         } else {
                             file_line = reader.readLine();
                         }
-                    }
-                    break;
-                case(PLAYER_SHOTS):
-                   while(!finished_loading){
+                        break;
+                    case(PLAYER_SHOTS):
                         if(file_line.equals("Player shots:")){
-                            file_line = reader.readLine(); //go to next row
-                            for(int i = 0; i < SIZE; i++){
-                                array_data[i] = file_line.toCharArray();
-                                file_line = reader.readLine();
-                            }
-                            //end loop after array_data is filled with save data
-                            finished_loading = true;
+                            ready_to_load = true;
                         } else {
                             file_line = reader.readLine();
                         }
-                    }
-                    break;
-                case(CPU_SHOTS):
-                   while(!finished_loading){
+                        break;
+                    case(CPU_SHOTS):
                         if(file_line.equals("CPU shots:")){
-                            file_line = reader.readLine(); //go to next row
-                            for(int i = 0; i < SIZE; i++){
-                                array_data[i] = file_line.toCharArray();
-                                file_line = reader.readLine();
-                            }
-                            //end loop after array_data is filled with save data
-                            finished_loading = true;
+                            ready_to_load = true;
                         } else {
                             file_line = reader.readLine();
                         }
+                        break;
+                    default:
+                        System.out.println("Load choice out of bounds.");
+                        System.out.println(); //blank line
+                        break;
+                }
+            }
+                
+            //once file_line has reached the choice's header, start filling array
+            if(ready_to_load){
+                //fill array with data
+                file_line = reader.readLine(); //go to next row
+                //check if file line is null
+                if(file_line != null){
+                    for(int i = 0; i < SIZE; i++){
+                        //check if it is null in the next row
+                        if (file_line != null) {
+                            for(int j = 0; j<file_line.length(); j++){
+                                array_data[i][j] = file_line.charAt(j);
+                            }
+                        }
+                        file_line = reader.readLine();
                     }
-                    break;
-                default:
-                    System.out.println("Load choice out of bounds.");
-                    System.out.println(); //blank line
-                    break;
+                }
             }
             
             //close BufferedReader
@@ -423,15 +413,19 @@ public class Battleship{
     boolean is_valid - the true or false value for if the data loaded correctly or not
     -----
     Description:
-    This method checks and returns whether or not the array passed to it has any null cells (which is 0 for char) and if it's not the size it should be.
+    This method checks and returns whether or not the array passed to it has any null cells (which is 0 for char), not one of the valid cells, and if it's not the size it should be.
     */
     public static boolean is_loaded(char[][] array_data){
         boolean is_valid = true;
 
-        //check if any cell is a null
+        //check if any cell is a null or not a valid cell
         for (int i = 0; i<SIZE; i++){
             for(int j = 0; j<SIZE; j++){
-                if (array_data[i][j] == 0 || array_data[i].length != SIZE) {
+
+                if (array_data[i][j] == 0 ||
+                !(array_data[i][j] == EMPTY_CELL || array_data[i][j] == HIT_CELL || array_data[i][j] == MISS_CELL || array_data[i][j] == DESTROYER_CELL || array_data[i][j] == CRUISER_CELL || array_data[i][j] == SUBMARINE_CELL || array_data[i][j] == BATTLESHIP_CELL || array_data[i][j] == AIR_CARRIER_CELL) ||
+                array_data[i].length != SIZE) {
+
                     is_valid = false;
                 }
             }
@@ -451,8 +445,8 @@ public class Battleship{
     String save_path - the valid save path for the new save file
     -----
     Description:
-    This method asks the user for a new save path and checks if it can be written to by creating a BufferedWriter for the save path in a try-catch block.
-    If the save path causes an IOException, the user is asked to reenter the save path.
+    This method asks the user for a new save path and checks if it can be written to by creating a File instance for the file at the save path.
+    If it does not pass the checks, the user is asked to reenter the save path.
     */
     public static String new_save_path(){
         Scanner scan = new Scanner(System.in);
@@ -464,16 +458,14 @@ public class Battleship{
         do{
             System.out.print(" > ");
             save_path = scan.nextLine();
-            try{
-                //test if creating a file will cause an IOException
-                File file = new File(save_path);
-                if (file.exists() && file.isFile() && file.canWrite()){
-                    valid_save_path = true;
-                }
-            } catch(IOException e){
-                //make user reenter save path if IOException occurs
-                System.out.println("Error accessing save file:");
-                System.out.println(e);
+
+            //check if the file exists, is a file, is writable to, and has a .txt extension
+            File file = new File(save_path);
+            if (file.exists() && file.isFile() && file.canWrite() && save_path.endsWith(".txt")){
+                valid_save_path = true;
+            } else {
+                //make user reenter save path if the path for the file entered is invalid 
+                System.out.println("Error accessing save file \""+save_path+"\".");
                 System.out.println(); //blank line
                 System.out.println("Reenter save file name:");
             }
