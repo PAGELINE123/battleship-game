@@ -91,8 +91,7 @@ public class Battleship{
                 } 
                 //load game
                 else if (user_choice.equals("2")) { 
-                    System.out.println("Enter the save file name (with .txt):");
-                    save_path = scan.nextLine();
+                    save_path = new_save_path();
                     System.out.println(); //blank line
 
                     //load game information
@@ -105,8 +104,8 @@ public class Battleship{
                     if(is_loaded(player_board) && is_loaded(cpu_board) && is_loaded(player_shots) && is_loaded(cpu_shots)){
                         System.out.println("Game successfully loaded.");
                         game_running = true;
+                        in_menu = false;
                     }
-                    in_menu = false;
                 } 
                 //show instructions
                 else if (user_choice.equals("3")){
@@ -126,6 +125,12 @@ public class Battleship{
             } while (in_menu);
             System.out.println(); //blank line
 
+            if(game_running){
+                System.out.println("Enter the name of the file to save to.");
+                save_path = new_save_path();
+                System.out.println(); //blank line
+            }
+            
             //game loop
             while(game_running) {
                 //print boards visible to the player
@@ -150,12 +155,14 @@ public class Battleship{
                     //shoot
                     if(user_choice.equals("1")){
                         //player_shoot();
-                        player_turn_passed = true;
+                        player_turn_passed = true; //proceed to next turn
                     }
                     //save game
                     else if(user_choice.equals("2")){
+                        System.out.println("Saving to "+save_path+"...");
                         //save_game(save_path, player_board, cpu_board, player_shots, cpu_shots);
-                        player_turn_passed = true;
+                        System.out.println("Game succesfully saved.");
+                        System.out.println(); //blank line
                     }
                     //quit game and return to main menu
                     else if(user_choice.equals("3")){
@@ -174,8 +181,9 @@ public class Battleship{
                             
                             //save and quit
                             if(user_choice.equals("1")){
-                                System.out.println("Saving...");
+                               System.out.println("Saving to "+save_path+"...");
                                 //save_game(save_path, player_board, cpu_board, player_shots, cpu_shots);
+                                System.out.println("Game succesfully saved.");
                                 System.out.println("Exiting to main menu...");
                                 System.out.println(); //blank line
                                 in_quit_menu = false;
@@ -189,6 +197,7 @@ public class Battleship{
                                 System.out.println("< Y > Exit ");
                                 System.out.println("Press any other key to cancel");
                                 System.out.println(); //blank line
+                                
                                 System.out.print(" > ");
                                 user_choice = scan.nextLine();
                                 
@@ -429,6 +438,48 @@ public class Battleship{
         }
 
         return is_valid;
+    }
+
+    /*
+    Method:
+    new_save_path
+    -----
+    Parameters:
+    none
+    -----
+    Returns:
+    String save_path - the valid save path for the new save file
+    -----
+    Description:
+    This method asks the user for a new save path and checks if it can be written to by creating a BufferedWriter for the save path in a try-catch block.
+    If the save path causes an IOException, the user is asked to reenter the save path.
+    */
+    public static String new_save_path(){
+        Scanner scan = new Scanner(System.in);
+        
+        boolean valid_save_path = false;
+        String save_path = "";
+
+        System.out.println("Enter the save file name (with .txt):");
+        do{
+            System.out.print(" > ");
+            save_path = scan.nextLine();
+            try{
+                //test if creating a file will cause an IOException
+                File file = new File(save_path);
+                if (file.exists() && file.isFile() && file.canWrite()){
+                    valid_save_path = true;
+                }
+            } catch(IOException e){
+                //make user reenter save path if IOException occurs
+                System.out.println("Error accessing save file:");
+                System.out.println(e);
+                System.out.println(); //blank line
+                System.out.println("Reenter save file name:");
+            }
+        } while(!valid_save_path);
+
+        return save_path;
     }
 
     /*
