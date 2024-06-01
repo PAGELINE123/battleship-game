@@ -525,11 +525,11 @@ public class Battleship{
         
         System.out.println("Ships:");
         System.out.println("Each player has the following ships:");
-        System.out.println("1 Carrier (5 spaces)");
-        System.out.println("1 Battleship (4 spaces)");
-        System.out.println("1 Cruiser (3 spaces)");
-        System.out.println("1 Submarine (3 spaces)");
-        System.out.println("1 Destroyer (2 spaces)");
+        System.out.println("A -  Carrier (5 spaces)");
+        System.out.println("B -  Battleship (4 spaces)");
+        System.out.println("C -  Cruiser (3 spaces)");
+        System.out.println("S -  Submarine (3 spaces)");
+        System.out.println("D -  Destroyer (2 spaces)");
         System.out.println();
         
         System.out.println("Placing Ships");
