@@ -104,6 +104,7 @@ public class Battleship{
                     //start game if all boards have data
                     if(is_loaded(player_board) && is_loaded(cpu_board) && is_loaded(player_shots) && is_loaded(cpu_shots)){
                         System.out.println("Game successfully loaded.");
+                        System.out.println(); //blank line
                         game_running = true;
                         in_menu = false;
                     } else {
@@ -119,6 +120,7 @@ public class Battleship{
                 //quit program
                 else if (user_choice.equals("4")){
                     System.out.println("Exiting program...");
+                    System.out.println(); //blank line
                     program_running = false;
                     in_menu = false;
                 }
@@ -127,7 +129,6 @@ public class Battleship{
                     System.out.println("Invalid input. Please enter a number between 1 and 4.");
                 }
             } while (in_menu);
-            System.out.println(); //blank line
 
             //get save file path
             if(game_running){
@@ -203,6 +204,7 @@ public class Battleship{
                                 
                                 System.out.print(" > ");
                                 user_choice = scan.nextLine();
+                                System.out.println();
 
                                 //exit if the user typed Y or y
                                 if((user_choice.toLowerCase()).equals("y")){
@@ -214,7 +216,6 @@ public class Battleship{
                             }
                             //cancel
                             else if(user_choice.equals("3")){
-                                System.out.println();
                                 in_quit_menu = false;
                             }
                             //invalid input
