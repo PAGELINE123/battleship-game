@@ -61,14 +61,14 @@ public class Battleship{
         int difficulty = 0; //0 default, 1 easy, 2 normal, 3 hard
         String save_path = "";
         String user_choice = "";
-        
+
         program_running = true;
-        
+
         //outer program loop
         while(program_running){
             //enter menu on program loop start
             in_menu = true;
-            
+
             //display options for game
             System.out.println("BATTLESHIP GAME by Mansour");
             System.out.println("< 1 > Start a new game");
@@ -100,7 +100,7 @@ public class Battleship{
                     cpu_board = load_file(save_path, CPU_BOARD);
                     player_shots = load_file(save_path, PLAYER_SHOTS);
                     cpu_shots = load_file(save_path, CPU_SHOTS);
-                        
+
                     //start game if all boards have data
                     if(is_loaded(player_board) && is_loaded(cpu_board) && is_loaded(player_shots) && is_loaded(cpu_shots)){
                         System.out.println("Game successfully loaded.");
@@ -136,12 +136,11 @@ public class Battleship{
                 save_path = new_save_path();
                 System.out.println(); //blank line
             }
-            
+
             //game loop
             while(game_running) {
                 //print boards visible to the player
-                print_board(player_board);
-                print_board(player_shots);
+                print_boards(player_board, player_shots);
                 System.out.println(); //blank line
 
                 player_turn_passed = false;
@@ -152,12 +151,12 @@ public class Battleship{
                 System.out.println("< 1 > Shoot");
                 System.out.println("< 2 > Save game");
                 System.out.println("< 3 > Quit game and return to main menu");
-                
+
                 do{
                     System.out.print(" > ");
                     user_choice = scan.nextLine();
                     System.out.println(); //blank line
-                    
+
                     //shoot
                     if(user_choice.equals("1")){
                         //player_shoot();
@@ -173,17 +172,17 @@ public class Battleship{
                     //quit game and return to main menu
                     else if(user_choice.equals("3")){
                         in_quit_menu = true;
-                        
+
                         System.out.println("Quit game and return to main menu:");
                         System.out.println("< 1 > Save and quit");
                         System.out.println("< 2 > Quit without saving");
                         System.out.println("< 3 > Cancel");
-                        
+
                         do{
                             System.out.print(" > ");
                             user_choice = scan.nextLine();
                             System.out.println(); //blank line
-                            
+
                             //save and quit
                             if(user_choice.equals("1")){
                                System.out.println("Saving to "+save_path+"...");
@@ -201,7 +200,7 @@ public class Battleship{
                                 System.out.println(); //blank line
                                 System.out.println("< Y > Exit ");
                                 System.out.println("Enter any other key to cancel");
-                                
+
                                 System.out.print(" > ");
                                 user_choice = scan.nextLine();
                                 System.out.println();
@@ -229,7 +228,7 @@ public class Battleship{
                         invalid_choice = true;
                     }
                 } while(invalid_choice);
-                
+
                 //computer's turn, plays if the player succesfully completes their turn
                 if(player_turn_passed){
                     System.out.println("Computer's turn:");
@@ -240,7 +239,7 @@ public class Battleship{
             }
         }
     }
-    
+
     /*
     Method:
     load_file
@@ -266,7 +265,7 @@ public class Battleship{
 
         //initialise array_data to be the same size as the board
         array_data = new char[SIZE][SIZE];
-        
+
         try{
             //create BufferedReader reading from save.txt
             BufferedReader reader = new BufferedReader(new FileReader(save_path));
@@ -310,7 +309,7 @@ public class Battleship{
                         break;
                 }
             }
-                
+
             //once file_line has reached the choice's header, start filling array
             if(ready_to_load){
                 //fill array with data
@@ -328,14 +327,14 @@ public class Battleship{
                     }
                 }
             }
-            
+
             //close BufferedReader
             reader.close();
         } catch (IOException e) {
             System.out.println("Error accessing save file:");
             System.out.println(e);
         }
-        
+
         //return data from save
         return array_data;
     }
@@ -355,7 +354,7 @@ public class Battleship{
     void
     -----
     Description:
-    
+
     */
     /*
     public static void save_game(String save_path, char[][] p_board, char[][] c_board, char[][] p_shots, char[][] c_shots){
@@ -363,7 +362,7 @@ public class Battleship{
         try{
             BufferedWriter writer = new BufferedWriter(new FileWriter(save_path));
             writer.write("Test");
-            
+
             //close BufferedWriter
             writer.close();
         } catch (IOException e) {
@@ -402,7 +401,7 @@ public class Battleship{
             }
         }
     }
-    
+
     /*
     Method:
     is_loaded
@@ -451,7 +450,7 @@ public class Battleship{
     */
     public static String new_save_path(){
         Scanner scan = new Scanner(System.in);
-        
+
         boolean valid_save_path = false;
         String save_path = "";
 
@@ -477,24 +476,64 @@ public class Battleship{
 
     /*
     Method:
-    print_board
+    print_boards
     -----
     Parameters:
-    char[][] board - the board to be printed
+    char[][] ship_board - the first board to be printed (should contain the ships)
+    char[][] shots_board - the second board to be printed (should contain the shots)
     -----
     Returns:
     void
     -----
     Description:
-    This method loops through the 2d array passed to it and prints all elements using a standard nested for loop.
+    Print_boards will print 2 arrays passed to it, where the first array passed is the board for ships and the second array passed is the board for shots. 
+    It will print the column numbers at the top and row numbers to the left of each board as coordinates.
     */
-    public static void print_board(char[][] board){
-        //loop through and print all items of the board
+    public static void print_boards(char[][] ship_board, char[][] shots_board){
+        System.out.println("Ships:                              Shots:");
+        //print the numbers at the top for ships
+        System.out.print(" ");
+        for(int i = 1; i<=SIZE; i++){
+            System.out.printf("%3d", i);
+        }
+
+        //print the gap between each board's numbers
+        System.out.print("     ");
+
+        //print the numbers at the top for shots
+        System.out.print(" ");
+        for(int i = 1; i<=SIZE; i++){
+            System.out.printf("%3d", i);
+        }
+
+        System.out.println(); //blank line (new line)
+
+        //loop through and print all items of both boards
         for(int i = 0; i<SIZE; i++){
-          for(int j = 0; j<SIZE; j++){
-            System.out.print(board[i][j]+" ");
-          }
-          System.out.println(); //new line
+            System.out.printf("%2d",i+1);
+            for(int j = 0; j < SIZE; j++){
+                if(j == 0){
+                    System.out.printf("%2c", ship_board[i][j]);
+                }else{
+                    System.out.printf("%3c", ship_board[i][j]);
+                }
+            }
+
+            //print gap between boards
+            System.out.print("     ");
+
+            //print row number for shots
+            System.out.printf("%2d",i+1);
+
+            //print the shots board
+            for(int j = 0; j < SIZE; j++){
+                if(j == 0){
+                    System.out.printf("%2c", shots_board[i][j]);
+                }else{
+                    System.out.printf("%3c", shots_board[i][j]);
+                }
+            }
+            System.out.println(); //new line
         }
     }
 
@@ -516,14 +555,14 @@ public class Battleship{
         System.out.println("Objective");
         System.out.println("The goal of Battleship is to sink all of your opponent's ships before they sink all of yours.");
         System.out.println();
-        
+
         System.out.println("Game Setup");
         System.out.println("Game Board:");
         System.out.println("Each player has a 10x10 grid.");
         System.out.println("Your grid shows your battleships, and the computer's shots on your battleships.");
         System.out.println("Another grid tracks your shots on the computer's battleships.");
         System.out.println();
-        
+
         System.out.println("Ships:");
         System.out.println("Each player has the following ships:");
         System.out.println("A -  Carrier (5 spaces)");
@@ -532,18 +571,18 @@ public class Battleship{
         System.out.println("S -  Submarine (3 spaces)");
         System.out.println("D -  Destroyer (2 spaces)");
         System.out.println();
-        
+
         System.out.println("Placing Ships");
         System.out.println("Player's Ships:");
         System.out.println("Place your ships on your grid.");
         System.out.println("Ships can be placed horizontally or vertically.");
         System.out.println("Ships cannot overlap or be placed outside the grid.");
         System.out.println();
-        
+
         System.out.println("Computer's Ships:");
         System.out.println("The computer will automatically place its ships on its grid.");
         System.out.println();
-        
+
         System.out.println("Playing the Game");
         System.out.println("Taking Turns:");
         System.out.println("You and the computer take turns firing shots at each others' ships.");
@@ -552,13 +591,13 @@ public class Battleship{
         System.out.println("Column: 4");
         System.out.println("Row: 5");
         System.out.println();
-        
+
         System.out.println("Checking Shots:");
         System.out.println("If the shot hits an opponent's ship, the hit is marked on your grid with an 'X'");
         System.out.println("If the shot misses, the miss is marked on your grid with an 'O'.");
         System.out.println("The computer will also take shots at your grid and you must mark the hits and misses accordingly.");
         System.out.println();
-        
+
         System.out.println("Sunken Ships:");
         System.out.println("When all parts of a ship are hit, the ship is sunk.");
         System.out.println("You are told when you or the computer sunk a ship (e.g., \"The computer sunk your battleship!\")");
