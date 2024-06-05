@@ -51,9 +51,11 @@ public class Battleship{
         boolean program_running = false;
         boolean in_menu = false;
         boolean in_quit_menu = false;
+        boolean placing_ships = false;
         boolean game_running = false;
         boolean invalid_choice = false;
         boolean player_turn_passed = false;
+        int game_over = 0; //0 default, 1 for a loss, 2 for a win, 3 for a quit
         char[][] player_board = new char[SIZE][SIZE];
         char[][] cpu_board = new char[SIZE][SIZE];
         char[][] player_shots = new char[SIZE][SIZE];
@@ -85,8 +87,8 @@ public class Battleship{
                 //new game
                 //if statement instead of switch for string because of school java version
                 if (user_choice.equals("1")) {
-                    reset_boards(player_board, cpu_board, player_shots, cpu_shots);
-                    game_running = true;
+                    clear_boards(player_board, cpu_board, player_shots, cpu_shots);
+                    placing_ships = true;
                     in_menu = false;
                 } 
                 //load game
@@ -105,7 +107,7 @@ public class Battleship{
                     if(is_loaded(player_board) && is_loaded(cpu_board) && is_loaded(player_shots) && is_loaded(cpu_shots)){
                         System.out.println("Game successfully loaded.");
                         System.out.println(); //blank line
-                        game_running = true;
+                        placing_ships = true;
                         in_menu = false;
                     } else {
                         System.out.println("Error loading from \""+save_path+"\".");
@@ -130,6 +132,13 @@ public class Battleship{
                 }
             } while (in_menu);
 
+            //player and cpu place boards and game starts after finished
+            if(placing_boards){
+                player_place_ships();
+                cpu_place_ships();
+                game_running = true;
+            }
+            
             //get save file path
             if(game_running){
                 System.out.println("Enter the name of the file to save to.");
@@ -235,6 +244,16 @@ public class Battleship{
                     System.out.println(" --- ");
                     System.out.println(); //blank line
                     //cpu_turn();
+                }
+
+                switch(game_over){
+                    case(0):
+                        //do nothing
+                        break;
+                    case(1):
+                        //player loss message
+                        game_running = false;
+                        break;
                 }
             }
         }
@@ -374,6 +393,36 @@ public class Battleship{
 
     /*
     Method:
+    clear_boards
+    -----
+    Parameters:
+    String save_path - the file path for the save
+    char[][] p_board - 2d array containing the player's board
+    char[][] c_board - 2d array containing the computer's board
+    char[][] p_shots - 2d array containing the player's shots
+    char[][] c_shots - 2d array contianing the computer's shots
+    -----
+    Returns:
+    void
+    -----
+    Description:
+    This method sets all elements in the player and computer's board/shots to '-', clearing all non-empty cells on the boards.
+    Uses pass-by-reference to make changes.
+    */
+    public static void clear_boards(char[][] p_board, char[][] c_board, char[][] p_shots, char[][] c_shots){
+        //set all elements to '-'
+        for(int i = 0; i<SIZE; i++){
+            for(int j = 0; j<SIZE; j++){
+                p_board[i][j] = '-';
+                c_board[i][j] = '-';
+                p_shots[i][j] = '-';
+                c_shots[i][j] = '-';
+            }
+        }
+    }
+
+    /*
+    Method:
     reset_boards
     -----
     Parameters:
@@ -387,17 +436,17 @@ public class Battleship{
     void
     -----
     Description:
-    This method sets all elements in the player and computer's board/shots to '-', resetting the boards.
+    This method sets all chars in the player and computer's board/shots to the integer 0, resetting the board to an empty state.
     Uses pass-by-reference to make changes.
     */
     public static void reset_boards(char[][] p_board, char[][] c_board, char[][] p_shots, char[][] c_shots){
-        //set all elements to '-'
+        //set all elements to int 0
         for(int i = 0; i<SIZE; i++){
             for(int j = 0; j<SIZE; j++){
-                p_board[i][j] = '-';
-                c_board[i][j] = '-';
-                p_shots[i][j] = '-';
-                c_shots[i][j] = '-';
+                p_board[i][j] = 0;
+                c_board[i][j] = 0;
+                p_shots[i][j] = 0;
+                c_shots[i][j] = 0;
             }
         }
     }
@@ -474,6 +523,43 @@ public class Battleship{
         return save_path;
     }
 
+    /*
+    Method:
+    print_board
+    -----
+    Parameters:
+    char[][] board - the board to be printed
+    -----
+    Returns:
+    void
+    -----
+    Description:
+    This method loops through the 2d array passed to it and prints all elements using a nested for loop.
+    Also prints row and column numbers for coordinates on the left and top of the board.
+    */
+    public static void print_boards(char[][] ship_board, char[][] shots_board){
+        //print the column numbers
+        System.out.print(" ");
+        for(int i = 1; i<=SIZE; i++){
+            System.out.printf("%3d", i);
+        }
+        System.out.println(); //blank line (new line)
+
+        //loop through and print all items of the board 
+        for(int i = 0; i<SIZE; i++){
+            //print row numbers
+            System.out.printf("%2d",i+1);
+            for(int j = 0; j < SIZE; j++){
+                if(j == 0){
+                    System.out.printf("%2c", ship_board[i][j]);
+                }else{
+                    System.out.printf("%3c", ship_board[i][j]);
+                }
+            }
+            System.out.println(); //new line
+        }
+    }
+    
     /*
     Method:
     print_boards
