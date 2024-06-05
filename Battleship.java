@@ -14,7 +14,7 @@ Description:
 
 import java.io.*;
 import java.util.Scanner;
-import java.util.InputMismatchException;
+import java.util.Random;
 
 public class Battleship{
     //global constants for readability
@@ -23,6 +23,7 @@ public class Battleship{
     static final int CPU_BOARD = 2;
     static final int PLAYER_SHOTS = 3;
     static final int CPU_SHOTS = 4;
+    static final int NUM_SHIPS = 5;
 
     static final char EMPTY_CELL = '-';
 
@@ -55,7 +56,7 @@ public class Battleship{
         boolean game_running = false;
         boolean invalid_choice = false;
         boolean player_turn_passed = false;
-        int game_over = 0; //0 default, 1 for a loss, 2 for a win, 3 for a quit
+        int game_over = 0; //0 default/game not over, 1 for a loss, 2 for a win, 3 for a quit
         char[][] player_board = new char[SIZE][SIZE];
         char[][] cpu_board = new char[SIZE][SIZE];
         char[][] player_shots = new char[SIZE][SIZE];
@@ -70,6 +71,8 @@ public class Battleship{
         while(program_running){
             //enter menu on program loop start
             in_menu = true;
+            //reset game over state on program loop start
+            game_over = 0;
 
             //display options for game
             System.out.println("BATTLESHIP GAME by Mansour");
@@ -133,10 +136,11 @@ public class Battleship{
             } while (in_menu);
 
             //player and cpu place boards and game starts after finished
-            if(placing_boards){
-                player_place_ships();
-                cpu_place_ships();
+            if(placing_ships){
+                //player_place_ships(player_board);
+                random_place_ships(cpu_board);
                 game_running = true;
+                placing_ships = false;
             }
             
             //get save file path
@@ -174,7 +178,7 @@ public class Battleship{
                     //save game
                     else if(user_choice.equals("2")){
                         System.out.println("Saving to "+save_path+"...");
-                        //save_game(save_path, player_board, cpu_board, player_shots, cpu_shots);
+                        save_game(save_path, player_board, cpu_board, player_shots, cpu_shots);
                         System.out.println("Game succesfully saved.");
                         System.out.println(); //blank line
                     }
@@ -195,12 +199,11 @@ public class Battleship{
                             //save and quit
                             if(user_choice.equals("1")){
                                System.out.println("Saving to "+save_path+"...");
-                                //save_game(save_path, player_board, cpu_board, player_shots, cpu_shots);
+                                save_game(save_path, player_board, cpu_board, player_shots, cpu_shots);
                                 System.out.println("Game succesfully saved.");
-                                System.out.println("Exiting to main menu...");
                                 System.out.println(); //blank line
+                                game_over = 3; //change game_over to player exitted
                                 in_quit_menu = false;
-                                game_running = false;
                             }
                             //quit without saving
                             else if(user_choice.equals("2")){
@@ -214,13 +217,11 @@ public class Battleship{
                                 user_choice = scan.nextLine();
                                 System.out.println();
 
-                                //exit if the user typed Y or y
+                                //change game_over to player exitted if player typed Y or y
                                 if((user_choice.toLowerCase()).equals("y")){
-                                    System.out.println("Exiting to main menu...");
-                                    game_running = false;
+                                    game_over = 3;
                                 }
                                 in_quit_menu = false;
-                                System.out.println(); //blank line
                             }
                             //cancel
                             else if(user_choice.equals("3")){
@@ -243,22 +244,96 @@ public class Battleship{
                     System.out.println("Computer's turn:");
                     System.out.println(" --- ");
                     System.out.println(); //blank line
-                    //cpu_turn();
+                    //cpu_shoot();
                 }
 
-                switch(game_over){
-                    case(0):
-                        //do nothing
-                        break;
-                    case(1):
-                        //player loss message
-                        game_running = false;
-                        break;
+                //if game over is not in default state, end game and print a message
+                if(game_over != 0){
+                    game_over_message(game_over);
+                    System.out.println(); //blank line
+                    
+                    reset_boards(player_board, cpu_board, player_shots, cpu_shots);
+                    game_running = false;
                 }
             }
         }
     }
 
+    /*
+    Method:
+    player_place_ships
+    -----
+    Parameters:
+    char[][] p_board - the player's board
+    -----
+    Returns:
+    void
+    -----
+    Description:
+    This method asks the player to place all their ships. Each ship can be placed horizontally or vertically, and cannot be placed out of bounds or clipping out of bounds.
+    Additionally, there is an option to randomly place the ships.
+    Uses pass-by-reference to make changes.
+    */
+    public static void player_place_ships(char[][] p_board){
+        Scanner scan = new Scanner(System.in);
+        
+        //variables
+        boolean done_placing_ships = false;
+        String user_input = "";
+        
+        do{
+            //print the player's board
+            System.out.println("Place your ships:");
+            print_board(p_board);
+            System.out.println(); //blank line
+            System.out.println("");
+            //rest of logic
+            
+        }while(!done_placing_ships);
+    }
+    
+    /*
+    Method:
+    random_place_ships
+    -----
+    Parameters:
+    char[][] board - the board to be given random ships
+    -----
+    Returns:
+    void
+    -----
+    Description:
+    This method fills the passed board with ships in random positions. Each ship can be placed horizontally or vertically, and cannot be placed out of bounds or clipping out of bounds.
+    Cpu_board is always filled using this method.
+    Uses pass-by-reference to make changes.
+    */
+    public static void random_place_ships(char[][] board){
+        Random rand = new Random();
+        
+        //variables
+        boolean valid_placement = false;
+        int ship = 0;  //0 Destroyer, 1 Cruiser, 2 Submarine, 3 Battleship, 4 Aircraft Carrier
+        int row = 0;
+        int col = 0;
+        int orientation = 0; //0 horizontal, 1 vertical
+        
+        for(int i = 0; i<NUM_SHIPS; i++){
+            //the ship to be placed is based on i
+            ship = i;
+            
+            //generate row and column from 0-9
+            row = rand.nextInt(10);
+            col = rand.nextInt(10);
+            //generate orientation from 0-1
+            orientation = rand.nextInt(2);
+            
+            System.out.println("ship: "+ship);
+            System.out.println("row: "+row);
+            System.out.println("column: "+col);
+            System.out.println("orientation: "+orientation);
+        }
+    }
+    
     /*
     Method:
     load_file
@@ -375,12 +450,54 @@ public class Battleship{
     Description:
 
     */
-    /*
     public static void save_game(String save_path, char[][] p_board, char[][] c_board, char[][] p_shots, char[][] c_shots){
         //create BufferedWriter writing to save.txt
         try{
             BufferedWriter writer = new BufferedWriter(new FileWriter(save_path));
-            writer.write("Test");
+            
+            //write player board to file
+            writer.write("Player ships:");
+            writer.newLine(); //next line
+            //loop through player_board
+            for(int i = 0; i<SIZE; i++){
+                for(int j = 0; j<SIZE; j++){
+                    writer.write(p_board[i][j]);
+                }
+                writer.newLine(); //next line
+            }
+            
+            //write computer board to file
+            writer.write("CPU ships:");
+            writer.newLine(); //next line
+            //loop through player_board
+            for(int i = 0; i<SIZE; i++){
+                for(int j = 0; j<SIZE; j++){
+                    writer.write(c_board[i][j]);
+                }
+                writer.newLine(); //next line
+            }
+            
+            //write player shots to file
+            writer.write("Player shots:");
+            writer.newLine(); //next line
+            //loop through player_board
+            for(int i = 0; i<SIZE; i++){
+                for(int j = 0; j<SIZE; j++){
+                    writer.write(p_shots[i][j]);
+                }
+                writer.newLine(); //next line
+            }
+            
+            //write computer shots to file
+            writer.write("CPU shots:");
+            writer.newLine(); //next line
+            //loop through player_board
+            for(int i = 0; i<SIZE; i++){
+                for(int j = 0; j<SIZE; j++){
+                    writer.write(c_shots[i][j]);
+                }
+                writer.newLine(); //next line
+            }
 
             //close BufferedWriter
             writer.close();
@@ -389,7 +506,6 @@ public class Battleship{
             System.out.println(e);
         }
     }
-    */
 
     /*
     Method:
@@ -465,6 +581,7 @@ public class Battleship{
     This method checks and returns whether or not the array passed to it has any null cells (which is 0 for char), not one of the valid cells, and if it's not the size it should be.
     */
     public static boolean is_loaded(char[][] array_data){
+        //variables
         boolean is_valid = true;
 
         //check if any cell is a null or not a valid cell
@@ -500,6 +617,7 @@ public class Battleship{
     public static String new_save_path(){
         Scanner scan = new Scanner(System.in);
 
+        //variables
         boolean valid_save_path = false;
         String save_path = "";
 
@@ -537,7 +655,7 @@ public class Battleship{
     This method loops through the 2d array passed to it and prints all elements using a nested for loop.
     Also prints row and column numbers for coordinates on the left and top of the board.
     */
-    public static void print_boards(char[][] ship_board, char[][] shots_board){
+    public static void print_board(char[][] board){
         //print the column numbers
         System.out.print(" ");
         for(int i = 1; i<=SIZE; i++){
@@ -551,9 +669,9 @@ public class Battleship{
             System.out.printf("%2d",i+1);
             for(int j = 0; j < SIZE; j++){
                 if(j == 0){
-                    System.out.printf("%2c", ship_board[i][j]);
+                    System.out.printf("%2c", board[i][j]);
                 }else{
-                    System.out.printf("%3c", ship_board[i][j]);
+                    System.out.printf("%3c", board[i][j]);
                 }
             }
             System.out.println(); //new line
@@ -621,6 +739,43 @@ public class Battleship{
             }
             System.out.println(); //new line
         }
+    }
+    
+    /*
+    Method:
+    game_over_message
+    -----
+    Parameters:
+    int game_over - the condition of the game end
+    -----
+    Returns:
+    void
+    -----
+    Description:
+    Game_over will take the condition of the game's end and output a message based on it.
+    */
+    public static void game_over_message(int game_over){
+        //output message based on game_over
+        switch(game_over){
+            //player loss
+            case(1):
+                System.out.println("YOU LOST...");
+                break;
+            //player win
+            case(2):
+                System.out.println("YOU WON!");
+                break;
+            //player quit
+            case(3):
+                //no special message
+                break;
+            //invalid game state
+            default:
+                System.out.println("Invalid game state.");
+                break;
+        }
+        
+        System.out.println("Returning to main menu...");
     }
 
     /*
