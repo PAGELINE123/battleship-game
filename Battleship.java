@@ -24,6 +24,8 @@ public class Battleship{
     static final int PLAYER_SHOTS = 3;
     static final int CPU_SHOTS = 4;
     static final int NUM_SHIPS = 5;
+    static final String HORIZONTAL = "H";
+    static final String VERTICAL = "V";
 
     static final char EMPTY_CELL = '-';
 
@@ -110,7 +112,8 @@ public class Battleship{
                     if(is_loaded(player_board) && is_loaded(cpu_board) && is_loaded(player_shots) && is_loaded(cpu_shots)){
                         System.out.println("Game successfully loaded.");
                         System.out.println(); //blank line
-                        placing_ships = true;
+                        //do not enter ship placement phase if game is loaded, instead enter directly into game
+                        game_running = true;
                         in_menu = false;
                     } else {
                         System.out.println("Error loading from \""+save_path+"\".");
@@ -311,27 +314,159 @@ public class Battleship{
         Random rand = new Random();
         
         //variables
+        boolean invalid_ship = false;
         boolean valid_placement = false;
         int ship = 0;  //0 Destroyer, 1 Cruiser, 2 Submarine, 3 Battleship, 4 Aircraft Carrier
         int row = 0;
         int col = 0;
-        int orientation = 0; //0 horizontal, 1 vertical
+        String orientation = "";
+        char ship_cell;
+        int ship_size = 0;
         
+        //begin placing ships
         for(int i = 0; i<NUM_SHIPS; i++){
+            //reset whether the ship is placed in a valid spot
+            valid_placement = false;
+            
             //the ship to be placed is based on i
             ship = i;
             
-            //generate row and column from 0-9
-            row = rand.nextInt(10);
-            col = rand.nextInt(10);
-            //generate orientation from 0-1
-            orientation = rand.nextInt(2);
+            switch(i){
+                //destroyer
+                case(0):
+                    ship_cell = DESTROYER_CELL;
+                    ship_size = DESTROYER_SIZE;
+                    break;
+                //cruiser
+                case(1):
+                    ship_cell = CRUISER_CELL;
+                    ship_size = CRUISER_SIZE;
+                    break;
+                //submarine
+                case(2):
+                    ship_cell = SUBMARINE_CELL;
+                    ship_size = SUBMARINE_SIZE;
+                    break;
+                //battleship
+                case(3):
+                    ship_cell = BATTLESHIP_CELL;
+                    ship_size = BATTLESHIP_SIZE;
+                    break;
+                //aircraft carrier
+                case(4):
+                    ship_cell = AIR_CARRIER_CELL;
+                    ship_size = AIR_CARRIER_SIZE;
+                    break;
+                default:
+                    System.out.println("Ship to be placed does not exist.");
+                    break;
+            }
+            
+            do{
+                //generate row and column from 0-9
+                row = rand.nextInt(SIZE);
+                col = rand.nextInt(SIZE);
+                //generate orientation from 0-1
+                if(rand.nextInt(2) == 0){
+                    orientation = HORIZONTAL;
+                }else{
+                    orientation = VERTICAL;
+                }
+                    
+                //check if the placement of the ship is valid
+                if(is_valid_placement(board, row, col, orientation, ship_size)){
+                    valid_placement = true;
+                }
+            } while(!valid_placement);
+
+            place_ship(board, row, col, orientation, ship_size, ship_cell);
             
             System.out.println("ship: "+ship);
             System.out.println("row: "+row);
             System.out.println("column: "+col);
             System.out.println("orientation: "+orientation);
         }
+    }
+
+    /*
+    Method:
+    is_valid_placement
+    -----
+    Parameters:
+    char[][] board - the board to have the placement checked
+    int row - the row number of the placement
+    int col - the column number of the placement
+    String orientation - the orientation of the placement, either vertical or horizontal
+    int ship_size - the length of the ship that is being checked
+    -----
+    Returns:
+    boolean is_valid - whether or not the ship placed at the given row number and column is in a valid position
+    -----
+    Description:
+    This method takes row and column number, orientation, and the length of the ship, and checks if it is overlapping with another ship or if it is out of bounds.
+    Returns true if the ship is in a valid position and can be placed without problems. False if it is not in a valid position.
+    */
+    public static boolean is_valid_placement(char[][] board, int row, int col, String orientation, int ship_size){
+        //variables
+        boolean is_valid = true;
+        
+        //check if out of bounds
+        if(orientation.equals(HORIZONTAL)){
+            if((col+ship_size) > SIZE){
+                is_valid = false;
+            }
+        } else if (orientation.equals(VERTICAL)){
+            if((row+ship_size) > SIZE){
+                is_valid = false;
+            }
+        }
+        
+        //check if overlapping with another ship
+        for(int i = 0; i<ship_size; i++){
+            if(orientation.equals(HORIZONTAL)){
+                if(board[row][col+i] != EMPY_CELL){
+                    is_valid = false;
+                }
+            } else if (orientation.equals(VERTICAL)){
+                if(board[row+i][col] != EMPY_CELL){
+                    is_valid = false;
+                }
+            }
+        }
+        
+        //if is_valid passes all the tests, it remains true
+        return is_valid;
+    }
+    
+    /*
+    Method:
+    place_ship
+    -----
+    Parameters:
+    char[][] board - the board to place the ship in
+    int row - the row number of the placement
+    int col - the column number of the placement
+    String orientation - the orientation of the placement, either vertical or horizontal
+    int ship_size - the length of the ship to be placed
+    char ship_cell - the cell of the ship to be placed
+    -----
+    Returns:
+    void
+    -----
+    Description:
+    
+    Uses pass-by-reference to make changes
+    */
+    public static void place_ship(char[][] board, int row, int col, String orientation, int ship_size, char ship_cell){
+        //variables
+        if (orientation.equals(HORIZONTAL)){
+            for(int i = 0; i<ship_size; i++){
+                board[row][col+i] = ship_cell;
+            }
+        } else if (orientation.equals(VERTICAL)){
+            for(int i = 0; i<ship_size; i++){
+                board[row+i][col] = ship_cell;
+            }
     }
     
     /*
