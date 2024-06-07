@@ -63,7 +63,7 @@ public class Battleship{
         char[][] cpu_board = new char[SIZE][SIZE];
         char[][] player_shots = new char[SIZE][SIZE];
         char[][] cpu_shots = new char[SIZE][SIZE];
-        int difficulty = 0; //0 default, 1 easy, 2 normal, 3 hard
+        int difficulty = 0; //0 default/easy, 1 normal
         String save_path = "";
         String user_choice = "";
 
@@ -141,7 +141,8 @@ public class Battleship{
             //player and cpu place boards and game starts after finished
             if(placing_ships){
                 //player_place_ships(player_board);
-                random_place_ships(cpu_board);
+                player_board = random_place_ships(player_board);
+                cpu_board = random_place_ships(cpu_board);
                 game_running = true;
                 placing_ships = false;
             }
@@ -247,7 +248,7 @@ public class Battleship{
                     System.out.println("Computer's turn:");
                     System.out.println(" --- ");
                     System.out.println(); //blank line
-                    //cpu_shoot();
+                    //cpu_shoot(player_board, cpu_shots, difficulty);
                 }
 
                 //if game over is not in default state, end game and print a message
@@ -303,24 +304,23 @@ public class Battleship{
     char[][] board - the board to be given random ships
     -----
     Returns:
-    void
+    char[][] board - the board with all placements done
     -----
     Description:
     This method fills the passed board with ships in random positions. Each ship can be placed horizontally or vertically, and cannot be placed out of bounds or clipping out of bounds.
     Cpu_board is always filled using this method.
     Uses pass-by-reference to make changes.
     */
-    public static void random_place_ships(char[][] board){
+    public static char[][] random_place_ships(char[][] board){
         Random rand = new Random();
         
         //variables
-        boolean invalid_ship = false;
         boolean valid_placement = false;
         int ship = 0;  //0 Destroyer, 1 Cruiser, 2 Submarine, 3 Battleship, 4 Aircraft Carrier
         int row = 0;
         int col = 0;
         String orientation = "";
-        char ship_cell;
+        char ship_cell = EMPTY_CELL; //default value
         int ship_size = 0;
         
         //begin placing ships
@@ -378,14 +378,16 @@ public class Battleship{
                     valid_placement = true;
                 }
             } while(!valid_placement);
-
-            place_ship(board, row, col, orientation, ship_size, ship_cell);
+            
+            board = place_ship(board, row, col, orientation, ship_size, ship_cell);
             
             System.out.println("ship: "+ship);
             System.out.println("row: "+row);
             System.out.println("column: "+col);
             System.out.println("orientation: "+orientation);
         }
+        
+        return board;
     }
 
     /*
@@ -409,30 +411,36 @@ public class Battleship{
     public static boolean is_valid_placement(char[][] board, int row, int col, String orientation, int ship_size){
         //variables
         boolean is_valid = true;
+        boolean out_of_bounds = false;
         
         //check if out of bounds
         if(orientation.equals(HORIZONTAL)){
             if((col+ship_size) > SIZE){
                 is_valid = false;
+                out_of_bounds = true;
             }
         } else if (orientation.equals(VERTICAL)){
             if((row+ship_size) > SIZE){
                 is_valid = false;
+                out_of_bounds = true;
             }
         }
         
-        //check if overlapping with another ship
-        for(int i = 0; i<ship_size; i++){
-            if(orientation.equals(HORIZONTAL)){
-                if(board[row][col+i] != EMPY_CELL){
-                    is_valid = false;
-                }
-            } else if (orientation.equals(VERTICAL)){
-                if(board[row+i][col] != EMPY_CELL){
-                    is_valid = false;
+        if(!out_of_bounds){
+            //check if overlapping with another ship
+            for(int i = 0; i<ship_size; i++){
+                if(orientation.equals(HORIZONTAL)){
+                    if(board[row][col+i] != EMPTY_CELL){
+                        is_valid = false;
+                    }
+                } else if (orientation.equals(VERTICAL)){
+                    if(board[row+i][col] != EMPTY_CELL){
+                        is_valid = false;
+                    }
                 }
             }
         }
+
         
         //if is_valid passes all the tests, it remains true
         return is_valid;
@@ -451,13 +459,13 @@ public class Battleship{
     char ship_cell - the cell of the ship to be placed
     -----
     Returns:
-    void
+    char[][] board - the board with the ships placed
     -----
     Description:
-    
-    Uses pass-by-reference to make changes
+    Replaces the cells in the path of the ship placement with the ship's cell char. Validity of the placement is done in a separate method.
+    Explicitly returns the new board.
     */
-    public static void place_ship(char[][] board, int row, int col, String orientation, int ship_size, char ship_cell){
+    public static char[][] place_ship(char[][] board, int row, int col, String orientation, int ship_size, char ship_cell){
         //variables
         if (orientation.equals(HORIZONTAL)){
             for(int i = 0; i<ship_size; i++){
@@ -467,6 +475,48 @@ public class Battleship{
             for(int i = 0; i<ship_size; i++){
                 board[row+i][col] = ship_cell;
             }
+        }
+        
+        return board;
+    }
+    
+    
+    public static void cpu_shoot(char[][] p_board, char[][] c_shots, int difficulty){
+        Random rand = new Random();
+        
+        //variables
+        boolean invalid_shot = false;
+        int row = 0;
+        int col = 0;
+      
+        //variables
+        switch(difficulty){
+            //easy
+            case(0):
+                //keep generating shots if the computer already hit that square
+                do{
+                    //generate random coordinates to shoot from 0-9
+                    row = rand.nextInt(SIZE);
+                    col = rand.nextInt(SIZE);
+                
+                    if((p_board[row][col] == MISS_CELL) || (p_board[row][col] == HIT_CELL)){
+                        valid_shot = true;
+                    }
+                }while(invalid_shot);
+                
+                //check if the shot coordinates hit a ship cell, make it a hit cell if so and a miss cell if not
+                if(p_board[row][col] == (array_data[i][j] == DESTROYER_CELL || array_data[i][j] == CRUISER_CELL || array_data[i][j] == SUBMARINE_CELL || array_data[i][j] == BATTLESHIP_CELL || array_data[i][j] == AIR_CARRIER_CELL)){
+                    p_board[row][col] = HIT_CELL;
+                }else{
+                    p_board[row][col] = MISS_CELL;
+                }
+                
+                break;
+            //normal
+            case(1):
+                //not implemented yet
+                break;
+        }
     }
     
     /*
