@@ -499,16 +499,18 @@ public class Battleship{
                     row = rand.nextInt(SIZE);
                     col = rand.nextInt(SIZE);
                 
-                    if((p_board[row][col] == MISS_CELL) || (p_board[row][col] == HIT_CELL)){
+                    if((c_shots[row][col] == MISS_CELL) || (c_shots[row][col] == HIT_CELL)){
                         valid_shot = true;
                     }
                 }while(invalid_shot);
                 
                 //check if the shot coordinates hit a ship cell, make it a hit cell if so and a miss cell if not
                 if(p_board[row][col] == (array_data[i][j] == DESTROYER_CELL || array_data[i][j] == CRUISER_CELL || array_data[i][j] == SUBMARINE_CELL || array_data[i][j] == BATTLESHIP_CELL || array_data[i][j] == AIR_CARRIER_CELL)){
+                    c_shots[row][col] = HIT_CELL;
                     p_board[row][col] = HIT_CELL;
                 }else{
                     p_board[row][col] = MISS_CELL;
+                    c_shots[row][col] = MISS_CELL;
                 }
                 
                 break;
