@@ -138,12 +138,20 @@ public class Battleship{
                 }
             } while (in_menu);
 
-            //player and cpu place boards and game starts after finished
+            //player and cpu place boards
             if(placing_ships){
                 //player_place_ships(player_board);
-                player_board = random_place_ships(player_board);
+                //player_board = random_place_ships(player_board);
                 cpu_board = random_place_ships(cpu_board);
-                game_running = true;
+                
+                //check if the player quit during placement
+                if(player_board[0][0] != 'Q'){
+                    //proceed to game if all ships are placed
+                    game_running = true;
+                }else{
+                    //reset boards and go back to main menu if the player quit during placement
+                    reset_boards(player_board, cpu_board, player_shots, cpu_shots);
+                }
                 placing_ships = false;
             }
             
@@ -245,12 +253,12 @@ public class Battleship{
 
                 //computer's turn, plays if the player succesfully completes their turn
                 if(player_turn_passed){
-                    System.out.println("Computer's turn:");
-                    System.out.println(" --- ");
+                    cpu_shoot(player_board, cpu_shots, difficulty);
                     System.out.println(); //blank line
-                    //cpu_shoot(player_board, cpu_shots, difficulty);
                 }
 
+                //game_over = is_game_over(player_board, cpu_board);
+                
                 //if game over is not in default state, end game and print a message
                 if(game_over != 0){
                     game_over_message(game_over);
@@ -282,18 +290,127 @@ public class Battleship{
         Scanner scan = new Scanner(System.in);
         
         //variables
-        boolean done_placing_ships = false;
-        String user_input = "";
+        boolean valid_placement = false;
+        boolean valid_choice = false;
+        boolean invalid_input = false;
+        String user_choice = "";
+        int ship = 0;  //0 Destroyer, 1 Cruiser, 2 Submarine, 3 Battleship, 4 Aircraft Carrier
+        int row = 0;
+        int col = 0;
+        String orientation = "";
+        char ship_cell = EMPTY_CELL; //default value
+        int ship_size = 0;
+        
+        System.out.println("Ship placement phase:");
+        System.out.println("< 1 > Place ships manually");
+        System.out.println("< 2 > Place ships randomly");
+        System.out.println("< 3 > Quit game");
         
         do{
-            //print the player's board
-            System.out.println("Place your ships:");
-            print_board(p_board);
-            System.out.println(); //blank line
-            System.out.println("");
-            //rest of logic
+            System.out.print(" > ");
+            user_choice = scan.nextLine();
+          
+            //if instead of switch because school java version does not support string switch statements
+            //place ships manually
+            if(user_choice.equals("1")){
+                //begin placing ships
+                for(int i = 0; i<NUM_SHIPS; i++){
+                    //reset whether the ship is placed in a valid spot
+                    valid_placement = false;
             
-        }while(!done_placing_ships);
+                    //the ship to be placed is based on i
+                    ship = i;
+            
+                    switch(i){
+                        //destroyer
+                        case(0):
+                            System.out.println("PLACING: DESTROYER")
+                            ship_cell = DESTROYER_CELL;
+                            ship_size = DESTROYER_SIZE;
+                            break;
+                        //cruiser
+                        case(1):
+                            System.out.println("PLACING: CRUISER")
+                            ship_cell = CRUISER_CELL;
+                            ship_size = CRUISER_SIZE;
+                            break;
+                        //submarine
+                        case(2):
+                            System.out.println("PLACING: SUBMARINE")
+                            ship_cell = SUBMARINE_CELL;
+                            ship_size = SUBMARINE_SIZE;
+                            break;
+                        //battleship
+                        case(3):
+                            System.out.println("PLACING: BATTLESHIP")
+                            ship_cell = BATTLESHIP_CELL;
+                            ship_size = BATTLESHIP_SIZE;
+                            break;
+                        //aircraft carrier
+                        case(4):
+                            System.out.println("PLACING: AIRCRAFT CARRIER")
+                            ship_cell = AIR_CARRIER_CELL;
+                            ship_size = AIR_CARRIER_SIZE;
+                            break;
+                        default:
+                            System.out.println("Ship to be placed does not exist.");
+                            break;
+                    }
+            
+                    print_board(p_board);
+                    
+                    do{
+                        try(
+                            //ask for row and column number
+                            System.out.print("Enter row number: ");
+                            row = scan.nextInt();
+                            System.out.print("Enter column number: ")
+                            col = scan.nextInt();
+                        )catch(InputMismatchException e){
+                            invalid_input = true;
+                            System.out.println("Invalid input. Row and column numbers must be whole numbers.");
+                        }
+                        
+                        System.out.print("Enter orientation (\"H\" or \"V\"): ");
+                        orientation = scan.nextLine();
+                        
+                        if(!orientation.toUpperCase.equals(VERTICAL) || !orientation.toUpperCase.equals(HORIZONTAL)){
+                            invalid_input = true;
+                            System.out.println("Invalid input. Orientation must be \"H\" or \"V\"");
+                        }
+                        
+                        if(!invalid_input){
+                            //check if the placement of the ship is valid
+                            if(is_valid_placement(board, row, col, orientation, ship_size)){
+                                valid_placement = true;
+                            }else{
+                                System.out.println("Please re-place your ship.");
+                            }
+                        }
+                    } while(!valid_placement);
+            
+                    board = place_ship(board, row, col, orientation, ship_size, ship_cell);
+                }
+                valid_choice = true;
+            }
+            //place ships randomly
+            else if(user_choice.equals("2")){
+                System.out.println("Randomly placing ships...");
+                board = random_place_ships(board);
+                System.out.println("Ships succesfully placed.");
+                valid_choice = true;
+            }
+            else if(user_choice.equals("3")){
+                board[0][0] = 'Q';
+                valid_choice = true;
+            }
+            //invalid choice
+            else{
+                System.out.println("Invalid input. Please enter a number between 1 and 3.");
+            }
+        } while(!valid_choice);
+        
+        return board;
     }
     
     /*
@@ -380,11 +497,6 @@ public class Battleship{
             } while(!valid_placement);
             
             board = place_ship(board, row, col, orientation, ship_size, ship_cell);
-            
-            System.out.println("ship: "+ship);
-            System.out.println("row: "+row);
-            System.out.println("column: "+col);
-            System.out.println("orientation: "+orientation);
         }
         
         return board;
@@ -411,36 +523,49 @@ public class Battleship{
     public static boolean is_valid_placement(char[][] board, int row, int col, String orientation, int ship_size){
         //variables
         boolean is_valid = true;
+        boolean invalid_coordinates = false;
         boolean out_of_bounds = false;
         
-        //check if out of bounds
-        if(orientation.equals(HORIZONTAL)){
-            if((col+ship_size) > SIZE){
-                is_valid = false;
-                out_of_bounds = true;
-            }
-        } else if (orientation.equals(VERTICAL)){
-            if((row+ship_size) > SIZE){
-                is_valid = false;
-                out_of_bounds = true;
+        //check if row or column is out of bounds
+        if((row >= SIZE || row < 0) || (col >= SIZE || col < 0)){
+            is_valid = false;
+            invalid_cooridnates = true;
+            System.out.println("Invalid placement: Coordinates out of bounds.");
+        }
+        
+        if(!invalid_coordinates){
+            //check if part of the ship would be out of bounds
+            if(orientation.equals(HORIZONTAL)){
+                if((col+ship_size) > SIZE){
+                    is_valid = false;
+                    out_of_bounds = true;
+                    System.out.println("Invalid placement: Ship is out of bounds horizontally.");
+                }
+            } else if (orientation.equals(VERTICAL)){
+                if((row+ship_size) > SIZE){
+                    is_valid = false;
+                    out_of_bounds = true;
+                    System.out.println("Invalid placement: Ship is out of bounds vertically.");
+                }
             }
         }
         
-        if(!out_of_bounds){
+        if(!out_of_bounds && !invalid_coordinates){
             //check if overlapping with another ship
             for(int i = 0; i<ship_size; i++){
                 if(orientation.equals(HORIZONTAL)){
                     if(board[row][col+i] != EMPTY_CELL){
                         is_valid = false;
+                        System.out.println("Invalid placement: Ship is overlapping with another ship horizontally.");
                     }
                 } else if (orientation.equals(VERTICAL)){
                     if(board[row+i][col] != EMPTY_CELL){
                         is_valid = false;
+                        System.out.println("Invalid placement: Ship is overlapping with another ship vertically.");
                     }
                 }
             }
         }
-
         
         //if is_valid passes all the tests, it remains true
         return is_valid;
@@ -480,7 +605,25 @@ public class Battleship{
         return board;
     }
     
-    
+    /*
+    Method:
+    cpu_shoot
+    -----
+    Parameters:
+    char[][] p_board - the player's board to be updated with a hit or miss cell
+    char[][] c_shots - the computer's shots used to keep track of what the computer shot
+    int difficulty - the difficulty of the computer, at higher difficulties implement a different method of shooting
+    -----
+    Returns:
+    void
+    -----
+    Description:
+    This method contains the computer's logic for shooting.
+    At difficulty 0 (easy), generates a random row and column and attempts to shoot at those coordinates.
+    If the computer already shot at those coordinates, it will generate another row and column until it is a valid spot to hit.
+    At difficulty 1 (normal), the computer will shoot around a spot that it hit until it sinks a ship, and will randomly generate a shot when there are no leads to pursue.
+    Uses pass-by-reference to make edits.
+    */
     public static void cpu_shoot(char[][] p_board, char[][] c_shots, int difficulty){
         Random rand = new Random();
         
@@ -500,18 +643,25 @@ public class Battleship{
                     col = rand.nextInt(SIZE);
                 
                     if((c_shots[row][col] == MISS_CELL) || (c_shots[row][col] == HIT_CELL)){
-                        valid_shot = true;
+                        invalid_shot = true;
                     }
                 }while(invalid_shot);
                 
+                System.out.println("The computer shot at:");
+                System.out.println("Row "+(row+1)+", Column "+(col+1));
+                System.out.println("----");
+                
                 //check if the shot coordinates hit a ship cell, make it a hit cell if so and a miss cell if not
-                if(p_board[row][col] == (array_data[i][j] == DESTROYER_CELL || array_data[i][j] == CRUISER_CELL || array_data[i][j] == SUBMARINE_CELL || array_data[i][j] == BATTLESHIP_CELL || array_data[i][j] == AIR_CARRIER_CELL)){
+                if(p_board[row][col] == DESTROYER_CELL || p_board[row][col] == CRUISER_CELL || p_board[row][col] == SUBMARINE_CELL || p_board[row][col] == BATTLESHIP_CELL || p_board[row][col] == AIR_CARRIER_CELL){
                     c_shots[row][col] = HIT_CELL;
                     p_board[row][col] = HIT_CELL;
+                    System.out.println("HIT!");
                 }else{
                     p_board[row][col] = MISS_CELL;
                     c_shots[row][col] = MISS_CELL;
+                    System.out.println("MISS");
                 }
+                System.out.println("----");
                 
                 break;
             //normal
@@ -520,6 +670,8 @@ public class Battleship{
                 break;
         }
     }
+    
+    
     
     /*
     Method:
@@ -1016,14 +1168,14 @@ public class Battleship{
         System.out.println("You and the computer take turns firing shots at each others' ships.");
         System.out.println("Enter the coordinates for your shot when it's your turn.");
         System.out.println("Example:");
-        System.out.println("Column: 4");
         System.out.println("Row: 5");
+        System.out.println("Column: 4");
         System.out.println();
 
         System.out.println("Checking Shots:");
         System.out.println("If the shot hits an opponent's ship, the hit is marked on your grid with an 'X'");
         System.out.println("If the shot misses, the miss is marked on your grid with an 'O'.");
-        System.out.println("The computer will also take shots at your grid and you must mark the hits and misses accordingly.");
+        System.out.println("The computer will also take shots at your grid and the hits and misses will be marked accordingly.");
         System.out.println();
 
         System.out.println("Sunken Ships:");
