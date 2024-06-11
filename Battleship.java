@@ -15,6 +15,7 @@ Description:
 import java.io.*;
 import java.util.Scanner;
 import java.util.Random;
+import java.util.InputMismatchException;
 
 public class Battleship{
     //global constants for readability
@@ -140,7 +141,7 @@ public class Battleship{
 
             //player and cpu place boards
             if(placing_ships){
-                //player_place_ships(player_board);
+                player_place_ships(player_board);
                 //player_board = random_place_ships(player_board);
                 cpu_board = random_place_ships(cpu_board);
                 
@@ -178,14 +179,20 @@ public class Battleship{
                 System.out.println("< 3 > Quit game and return to main menu");
 
                 do{
+                    //reset invalid_choice on loop start
+                    invalid_choice = false;
+                    
+                    
                     System.out.print(" > ");
                     user_choice = scan.nextLine();
                     System.out.println(); //blank line
 
                     //shoot
                     if(user_choice.equals("1")){
+                        System.out.println("SHOOT");
                         //player_shoot();
                         player_turn_passed = true; //proceed to next turn
+                        System.out.println(player_turn_passed);
                     }
                     //save game
                     else if(user_choice.equals("2")){
@@ -309,10 +316,29 @@ public class Battleship{
         do{
             System.out.print(" > ");
             user_choice = scan.nextLine();
+            System.out.println(); //blank line
           
             //if instead of switch because school java version does not support string switch statements
             //place ships manually
             if(user_choice.equals("1")){
+                //print out placement guide
+                System.out.println(" -- Reminder -- ");
+                System.out.println("When placing on a row and column horizontally, your ship will place like this:");
+                System.out.println("Row 1, Column 2");
+                System.out.println("  1 2 3 4 5 6 ");
+                System.out.println("1 - X X X X - ");
+                System.out.println("2 - - - - - - ");
+                System.out.println(); //blank line
+                System.out.println("When placing on a row and column vertically, your ship will place like this:");
+                System.out.println("Row 1, Column 2");
+                System.out.println("  1 2 3");
+                System.out.println("1 - X -");
+                System.out.println("2 - X -");
+                System.out.println("3 - X -");
+                System.out.println("4 - X -");
+                System.out.println("5 - - -");
+                System.out.println(); //blank line
+              
                 //begin placing ships
                 for(int i = 0; i<NUM_SHIPS; i++){
                     //reset whether the ship is placed in a valid spot
@@ -324,31 +350,31 @@ public class Battleship{
                     switch(i){
                         //destroyer
                         case(0):
-                            System.out.println("PLACING: DESTROYER")
+                            System.out.println("PLACING: DESTROYER");
                             ship_cell = DESTROYER_CELL;
                             ship_size = DESTROYER_SIZE;
                             break;
                         //cruiser
                         case(1):
-                            System.out.println("PLACING: CRUISER")
+                            System.out.println("PLACING: CRUISER");
                             ship_cell = CRUISER_CELL;
                             ship_size = CRUISER_SIZE;
                             break;
                         //submarine
                         case(2):
-                            System.out.println("PLACING: SUBMARINE")
+                            System.out.println("PLACING: SUBMARINE");
                             ship_cell = SUBMARINE_CELL;
                             ship_size = SUBMARINE_SIZE;
                             break;
                         //battleship
                         case(3):
-                            System.out.println("PLACING: BATTLESHIP")
+                            System.out.println("PLACING: BATTLESHIP");
                             ship_cell = BATTLESHIP_CELL;
                             ship_size = BATTLESHIP_SIZE;
                             break;
                         //aircraft carrier
                         case(4):
-                            System.out.println("PLACING: AIRCRAFT CARRIER")
+                            System.out.println("PLACING: AIRCRAFT CARRIER");
                             ship_cell = AIR_CARRIER_CELL;
                             ship_size = AIR_CARRIER_SIZE;
                             break;
@@ -357,51 +383,76 @@ public class Battleship{
                             break;
                     }
             
+                    //print board
                     print_board(p_board);
                     
+                    System.out.println(); //blank line
+                    
+                    //print out the ship that is being placed
+                    System.out.print("Ship: ");
+                    for(int j = 0; j<ship_size; j++){
+                        System.out.print(ship_cell+" ");
+                    }
+                    System.out.println(); //next line
+                    
+                    System.out.println(); //blank line
+                    
                     do{
+                        //reset at start of loop
+                        invalid_input = false;
+                        valid_placement = false;
                         try{
                             //ask for row and column number
                             System.out.print("Enter row number: ");
                             row = scan.nextInt();
-                            System.out.print("Enter column number: ")
+                            System.out.print("Enter column number: ");
                             col = scan.nextInt();
                         }catch(InputMismatchException e){
                             invalid_input = true;
                             System.out.println("Invalid input. Row and column numbers must be whole numbers.");
                         }
+                        scan.nextLine(); //remove new line character from input stream
                         
                         System.out.print("Enter orientation (\"H\" or \"V\"): ");
                         orientation = scan.nextLine();
                         
-                        if(!orientation.toUpperCase.equals(VERTICAL) || !orientation.toUpperCase.equals(HORIZONTAL)){
+                        if((orientation.toUpperCase().equals(VERTICAL)) && (orientation.toUpperCase().equals(HORIZONTAL))){
                             invalid_input = true;
                             System.out.println("Invalid input. Orientation must be \"H\" or \"V\"");
                         }
                         
                         if(!invalid_input){
+                            //lower row and column down by one to be compatible with indexing
+                            row--;
+                            col--;
                             //check if the placement of the ship is valid
-                            if(is_valid_placement(board, row, col, orientation, ship_size, true)){
+                            if(is_valid_placement(p_board, row, col, orientation, ship_size, true)){
                                 valid_placement = true;
                             }else{
                                 System.out.println("Please re-place your ship.");
                             }
                         }
+                        
+                        System.out.println(); //blank line
                     } while(!valid_placement);
             
-                    board = place_ship(board, row, col, orientation, ship_size, ship_cell);
+                    //place the ship
+                    p_board = place_ship(p_board, row, col, orientation, ship_size, ship_cell);
                 }
+                System.out.println("Ships successfully placed.");
+                System.out.println(); //blank line
                 valid_choice = true;
             }
             //place ships randomly
             else if(user_choice.equals("2")){
                 System.out.println("Randomly placing ships...");
-                board = random_place_ships(board);
+                p_board = random_place_ships(p_board);
                 System.out.println("Ships succesfully placed.");
+                System.out.println(); //blank line
                 valid_choice = true;
             }
             else if(user_choice.equals("3")){
-                board[0][0] = 'Q';
+                p_board[0][0] = 'Q';
                 valid_choice = true;
             }
             //invalid choice
@@ -409,8 +460,6 @@ public class Battleship{
                 System.out.println("Invalid input. Please enter a number between 1 and 3.");
             }
         } while(!valid_choice);
-        
-        return board;
     }
     
     /*
@@ -491,7 +540,7 @@ public class Battleship{
                 }
                     
                 //check if the placement of the ship is valid
-                if(is_valid_placement(board, row, col, orientation, ship_size)){
+                if(is_valid_placement(board, row, col, orientation, ship_size, false)){
                     valid_placement = true;
                 }
             } while(!valid_placement);
@@ -524,59 +573,74 @@ public class Battleship{
     */
     public static boolean is_valid_placement(char[][] board, int row, int col, String orientation, int ship_size, boolean show_messages){
         //variables
+        //0 valid, 1 row or col out of bounds, 2 part of ship out of bounds horizontally, 3 ship part of ship out of bounds vertically, 
+        //4 ship overlapping horizontally, 5 ship overlaping vertically
+        int condition = 0;
         boolean is_valid = true;
-        boolean invalid_coordinates = false;
-        boolean out_of_bounds = false;
         
         //check if row or column is out of bounds
         if((row >= SIZE || row < 0) || (col >= SIZE || col < 0)){
-            is_valid = false;
-            invalid_cooridnates = true;
-            if(show_messages){
-                System.out.println("Invalid placement: Coordinates out of bounds.");
-            }
+            condition = 1;
         }
         
-        if(!invalid_coordinates){
+        if(condition == 0){
             //check if part of the ship would be out of bounds
             if(orientation.equals(HORIZONTAL)){
                 if((col+ship_size) > SIZE){
-                    is_valid = false;
-                    out_of_bounds = true;
-                    if(show_messages){
-                        System.out.println("Invalid placement: Ship is out of bounds horizontally.");
-                    }
+                    condition = 2;
                 }
             } else if (orientation.equals(VERTICAL)){
                 if((row+ship_size) > SIZE){
-                    is_valid = false;
-                    out_of_bounds = true;
-                    if(show_messages){
-                        System.out.println("Invalid placement: Ship is out of bounds vertically.");
-                    }
+                    condition = 3;
                 }
             }
         }
         
-        if(!out_of_bounds && !invalid_coordinates){
+        if(condition == 0){
             //check if overlapping with another ship
             for(int i = 0; i<ship_size; i++){
                 if(orientation.equals(HORIZONTAL)){
                     if(board[row][col+i] != EMPTY_CELL){
-                        is_valid = false;
-                        if(show_messages){
-                            System.out.println("Invalid placement: Ship is overlapping with another ship horizontally.");
-                        }
+                        condition = 4;
                     }
                 } else if (orientation.equals(VERTICAL)){
                     if(board[row+i][col] != EMPTY_CELL){
-                        is_valid = false;
-                        if(show_messages){
-                            System.out.println("Invalid placement: Ship is overlapping with another ship vertically.");
-                        }
+                        condition = 5;
                     }
                 }
             }
+        }
+        
+        //print error messages if desired
+        if(show_messages){
+            switch(condition){
+                case(0):
+                    //pass
+                    break;
+                case(1):
+                    System.out.println("Invalid placement: Coordinates out of bounds.");
+                    break;
+                case(2):
+                    System.out.println("Invalid placement: Ship is out of bounds horizontally.");
+                    break;
+                case(3):
+                    System.out.println("Invalid placement: Ship is out of bounds vertically.");
+                    break;
+                case(4):
+                    System.out.println("Invalid placement: Ship is overlapping with another ship horizontally.");
+                    break;
+                case(5):
+                    System.out.println("Invalid placement: Ship is overlapping with another ship vertically.");
+                    break;
+                default:
+                    System.out.println("Placement conditon out of bounds.");
+                    break;
+            }
+        }
+        
+        //set is_valid to false if it is not in a valid condition
+        if(condition != 0){
+            is_valid = false;
         }
         
         //if is_valid passes all the tests, it remains true
@@ -1169,6 +1233,21 @@ public class Battleship{
         System.out.println("Place your ships on your grid.");
         System.out.println("Ships can be placed horizontally or vertically.");
         System.out.println("Ships cannot overlap or be placed outside the grid.");
+        System.out.println();
+        System.out.println("When placing on a row and column horizontally, your ship will place like this:");
+        System.out.println("Row 1, Column 2");
+        System.out.println("  1 2 3 4 5 6 ");
+        System.out.println("1 - X X X X - ");
+        System.out.println("2 - - - - - - ");
+        System.out.println();
+        System.out.println("When placing on a row and column vertically, your ship will place like this:");
+        System.out.println("Row 1, Column 2");
+        System.out.println("  1 2 3");
+        System.out.println("1 - X -");
+        System.out.println("2 - X -");
+        System.out.println("3 - X -");
+        System.out.println("4 - X -");
+        System.out.println("5 - - -");
         System.out.println();
 
         System.out.println("Computer's Ships:");
