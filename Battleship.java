@@ -360,13 +360,13 @@ public class Battleship{
                     print_board(p_board);
                     
                     do{
-                        try(
+                        try{
                             //ask for row and column number
                             System.out.print("Enter row number: ");
                             row = scan.nextInt();
                             System.out.print("Enter column number: ")
                             col = scan.nextInt();
-                        )catch(InputMismatchException e){
+                        }catch(InputMismatchException e){
                             invalid_input = true;
                             System.out.println("Invalid input. Row and column numbers must be whole numbers.");
                         }
@@ -381,7 +381,7 @@ public class Battleship{
                         
                         if(!invalid_input){
                             //check if the placement of the ship is valid
-                            if(is_valid_placement(board, row, col, orientation, ship_size)){
+                            if(is_valid_placement(board, row, col, orientation, ship_size, true)){
                                 valid_placement = true;
                             }else{
                                 System.out.println("Please re-place your ship.");
@@ -512,6 +512,7 @@ public class Battleship{
     int col - the column number of the placement
     String orientation - the orientation of the placement, either vertical or horizontal
     int ship_size - the length of the ship that is being checked
+    boolean show_messages - whether or not the method should print out error messages
     -----
     Returns:
     boolean is_valid - whether or not the ship placed at the given row number and column is in a valid position
@@ -519,8 +520,9 @@ public class Battleship{
     Description:
     This method takes row and column number, orientation, and the length of the ship, and checks if it is overlapping with another ship or if it is out of bounds.
     Returns true if the ship is in a valid position and can be placed without problems. False if it is not in a valid position.
+    Also prints out a message detailing the cause of the placement being invalid based on the value of show_messages.
     */
-    public static boolean is_valid_placement(char[][] board, int row, int col, String orientation, int ship_size){
+    public static boolean is_valid_placement(char[][] board, int row, int col, String orientation, int ship_size, boolean show_messages){
         //variables
         boolean is_valid = true;
         boolean invalid_coordinates = false;
@@ -530,7 +532,9 @@ public class Battleship{
         if((row >= SIZE || row < 0) || (col >= SIZE || col < 0)){
             is_valid = false;
             invalid_cooridnates = true;
-            System.out.println("Invalid placement: Coordinates out of bounds.");
+            if(show_messages){
+                System.out.println("Invalid placement: Coordinates out of bounds.");
+            }
         }
         
         if(!invalid_coordinates){
@@ -539,13 +543,17 @@ public class Battleship{
                 if((col+ship_size) > SIZE){
                     is_valid = false;
                     out_of_bounds = true;
-                    System.out.println("Invalid placement: Ship is out of bounds horizontally.");
+                    if(show_messages){
+                        System.out.println("Invalid placement: Ship is out of bounds horizontally.");
+                    }
                 }
             } else if (orientation.equals(VERTICAL)){
                 if((row+ship_size) > SIZE){
                     is_valid = false;
                     out_of_bounds = true;
-                    System.out.println("Invalid placement: Ship is out of bounds vertically.");
+                    if(show_messages){
+                        System.out.println("Invalid placement: Ship is out of bounds vertically.");
+                    }
                 }
             }
         }
@@ -556,12 +564,16 @@ public class Battleship{
                 if(orientation.equals(HORIZONTAL)){
                     if(board[row][col+i] != EMPTY_CELL){
                         is_valid = false;
-                        System.out.println("Invalid placement: Ship is overlapping with another ship horizontally.");
+                        if(show_messages){
+                            System.out.println("Invalid placement: Ship is overlapping with another ship horizontally.");
+                        }
                     }
                 } else if (orientation.equals(VERTICAL)){
                     if(board[row+i][col] != EMPTY_CELL){
                         is_valid = false;
-                        System.out.println("Invalid placement: Ship is overlapping with another ship vertically.");
+                        if(show_messages){
+                            System.out.println("Invalid placement: Ship is overlapping with another ship vertically.");
+                        }
                     }
                 }
             }
