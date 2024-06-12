@@ -152,6 +152,9 @@ public class Battleship{
                 }else{
                     //reset boards and go back to main menu if the player quit during placement
                     reset_boards(player_board, cpu_board, player_shots, cpu_shots);
+                    //player quit out-of-game message
+                    game_over = 4;
+                    game_over_message(game_over, player_board, cpu_board);
                 }
                 placing_ships = false;
             }
@@ -166,7 +169,7 @@ public class Battleship{
             //game loop
             while(game_running) {
                 //print boards visible to the player
-                print_boards(player_board, player_shots);
+                print_boards(player_board, player_shots, 0);
                 System.out.println(); //blank line
 
                 player_turn_passed = false;
@@ -189,10 +192,9 @@ public class Battleship{
 
                     //shoot
                     if(user_choice.equals("1")){
-                        System.out.println("SHOOT");
-                        //player_shoot();
+                        player_shoot(cpu_board, player_shots);
+                        System.out.println(); //blank line
                         player_turn_passed = true; //proceed to next turn
-                        System.out.println(player_turn_passed);
                     }
                     //save game
                     else if(user_choice.equals("2")){
@@ -264,11 +266,14 @@ public class Battleship{
                     System.out.println(); //blank line
                 }
 
-                //game_over = is_game_over(player_board, cpu_board);
+                //automatically detect for game_over only if game_over has not already been set to something else
+                if(game_over == 0){
+                    game_over = check_ships(player_board, cpu_board);
+                }
                 
                 //if game over is not in default state, end game and print a message
                 if(game_over != 0){
-                    game_over_message(game_over);
+                    game_over_message(game_over, player_board, cpu_board);
                     System.out.println(); //blank line
                     
                     reset_boards(player_board, cpu_board, player_shots, cpu_shots);
@@ -301,7 +306,6 @@ public class Battleship{
         boolean valid_choice = false;
         boolean invalid_input = false;
         String user_choice = "";
-        int ship = 0;  //0 Destroyer, 1 Cruiser, 2 Submarine, 3 Battleship, 4 Aircraft Carrier
         int row = 0;
         int col = 0;
         String orientation = "";
@@ -344,9 +348,7 @@ public class Battleship{
                     //reset whether the ship is placed in a valid spot
                     valid_placement = false;
             
-                    //the ship to be placed is based on i
-                    ship = i;
-            
+                    //0 Destroyer, 1 Cruiser, 2 Submarine, 3 Battleship, 4 Aircraft Carrier
                     switch(i){
                         //destroyer
                         case(0):
@@ -416,7 +418,7 @@ public class Battleship{
                         System.out.print("Enter orientation (\"H\" or \"V\"): ");
                         orientation = scan.nextLine();
                         
-                        if((orientation.toUpperCase().equals(VERTICAL)) && (orientation.toUpperCase().equals(HORIZONTAL))){
+                        if((!orientation.toUpperCase().equals(VERTICAL)) && (!orientation.toUpperCase().equals(HORIZONTAL))){
                             invalid_input = true;
                             System.out.println("Invalid input. Orientation must be \"H\" or \"V\"");
                         }
@@ -482,7 +484,6 @@ public class Battleship{
         
         //variables
         boolean valid_placement = false;
-        int ship = 0;  //0 Destroyer, 1 Cruiser, 2 Submarine, 3 Battleship, 4 Aircraft Carrier
         int row = 0;
         int col = 0;
         String orientation = "";
@@ -494,9 +495,7 @@ public class Battleship{
             //reset whether the ship is placed in a valid spot
             valid_placement = false;
             
-            //the ship to be placed is based on i
-            ship = i;
-            
+            //0 Destroyer, 1 Cruiser, 2 Submarine, 3 Battleship, 4 Aircraft Carrier
             switch(i){
                 //destroyer
                 case(0):
@@ -683,6 +682,79 @@ public class Battleship{
     
     /*
     Method:
+    player_shoot
+    -----
+    Parameters:
+    char[][] c_board - the computer's board to be updated with a hit or miss cell
+    char[][] p_shots - the player's shots used to keep track of what the player has shot
+    -----
+    Returns:
+    void
+    -----
+    Description:
+    This method allows the player to shoot at a cooridinate they enter.
+    If they hit or miss, both the computer board and player shots board are marked with a hit or miss cell respectively.
+    Uses pass-by-reference to make edits.
+    */
+    public static void player_shoot(char[][] c_board, char[][] p_shots){
+        Scanner scan = new Scanner(System.in);
+        
+        //variables
+        boolean invalid_shot = false;
+        int row = 0;
+        int col = 0;
+      
+        //ask player for shot
+        System.out.println("Enter coordinates to shoot. ");
+        do{
+            //reset invalid_shot on loop start
+            invalid_shot = false;
+            try{
+                System.out.print("ROW: ");
+                row = scan.nextInt();
+                System.out.print("COL: ");
+                col = scan.nextInt();
+                System.out.println(); //blank line
+            
+                //decrement row and col by one for indexing
+                row--;
+                col--;
+            
+                //check if row or col out of bounds or if the player has already shot at the cell
+                if ((row >= SIZE || row < 0) || (col >= SIZE || col < 0)){
+                    invalid_shot = true;
+                    System.out.println("Coordinates out of bounds. ");
+                } else if ((p_shots[row][col] == MISS_CELL) || (p_shots[row][col] == HIT_CELL)){
+                    invalid_shot = true;
+                    System.out.println("You have already shot at that cell. ");
+                }
+                if(invalid_shot){
+                    System.out.println("Reenter coordinates: ");
+                }
+            } catch (InputMismatchException e){
+                System.out.println("Invalid input. Row and column numbers must be whole numbers.");
+            }
+        }while(invalid_shot);
+                
+        System.out.println("You shot at:");
+        System.out.println("Row "+(row+1)+", Column "+(col+1));
+        System.out.println("----");
+                
+        //check if the shot coordinates hit a ship cell, make it a hit cell if so and a miss cell if not
+        if(c_board[row][col] == DESTROYER_CELL || c_board[row][col] == CRUISER_CELL || c_board[row][col] == SUBMARINE_CELL || c_board[row][col] == BATTLESHIP_CELL || c_board[row][col] == AIR_CARRIER_CELL){
+            p_shots[row][col] = HIT_CELL;
+            c_board[row][col] = HIT_CELL;
+            System.out.println("HIT!");
+        }else{
+            p_shots[row][col] = MISS_CELL;
+            c_board[row][col] = MISS_CELL;
+            System.out.println("MISS");
+        }
+        System.out.println("----");
+    }
+    
+    /*
+    Method:
     cpu_shoot
     -----
     Parameters:
@@ -708,11 +780,11 @@ public class Battleship{
         int row = 0;
         int col = 0;
       
-        //variables
+        //different diffiulties
         switch(difficulty){
             //easy
             case(0):
-                //keep generating shots if the computer already hit that square
+                //keep generating shots if the computer already hit that cell
                 do{
                     //generate random coordinates to shoot from 0-9
                     row = rand.nextInt(SIZE);
@@ -733,8 +805,8 @@ public class Battleship{
                     p_board[row][col] = HIT_CELL;
                     System.out.println("HIT!");
                 }else{
-                    p_board[row][col] = MISS_CELL;
                     c_shots[row][col] = MISS_CELL;
+                    p_board[row][col] = MISS_CELL;
                     System.out.println("MISS");
                 }
                 System.out.println("----");
@@ -747,7 +819,55 @@ public class Battleship{
         }
     }
     
-    
+    /*
+    Method:
+    check_ships
+    -----
+    Parameters:
+    char[][] p_board - the player's board to check for ship cells
+    char[][] c_shots - the computer's board to check for ship cells
+    -----
+    Returns:
+    int game_status - the status of the game; 0 game not over, 1 for player loss, 2 for player win
+    -----
+    Description:
+    This method loops through both p_board and c_board and checks if there are no more ships on a board.
+    If the computer has no more ships, the player wins, and if the player has no ships, the player loses. If both still have ships, the game continues.
+    Returns game_status as an indicator of game state.
+    */
+    public static int check_ships(char[][] p_board, char[][] c_board){
+        //variables
+        boolean c_game_over = true;
+        boolean p_game_over = true;
+        int game_status = 0; //0 default/game not over, 1 for player loss, 2 for player win
+        
+        //check if either player board or computer board have any ship cells left
+        for(int i = 0; i<SIZE; i++){
+            for(int j = 0; j<SIZE; j++){
+                if(p_board[i][j] == DESTROYER_CELL || p_board[i][j] == CRUISER_CELL || p_board[i][j] == SUBMARINE_CELL || p_board[i][j] == BATTLESHIP_CELL || p_board[i][j] == AIR_CARRIER_CELL){
+                    p_game_over = false;
+                }
+                if(c_board[i][j] == DESTROYER_CELL || c_board[i][j] == CRUISER_CELL || c_board[i][j] == SUBMARINE_CELL || c_board[i][j] == BATTLESHIP_CELL || c_board[i][j] == AIR_CARRIER_CELL){
+                    c_game_over = false;
+                }
+            }
+        }
+        
+        //if player has no ships, player loses
+        if(p_game_over){
+            game_status = 1;
+        }
+        //if computer has no ships, player wins
+        else if(c_game_over){
+            game_status = 2;
+        }
+        //if both sides have ships, game continues
+        else{
+            game_status = 0;
+        }
+        
+        return game_status;
+    }
     
     /*
     Method:
@@ -1100,6 +1220,7 @@ public class Battleship{
     Parameters:
     char[][] ship_board - the first board to be printed (should contain the ships)
     char[][] shots_board - the second board to be printed (should contain the shots)
+    int mode - 0 for ships/shots header, 1 for player/computer header
     -----
     Returns:
     void
@@ -1108,8 +1229,19 @@ public class Battleship{
     Print_boards will print 2 arrays passed to it, where the first array passed is the board for ships and the second array passed is the board for shots. 
     It will print the column numbers at the top and row numbers to the left of each board as coordinates.
     */
-    public static void print_boards(char[][] ship_board, char[][] shots_board){
-        System.out.println("Ships:                              Shots:");
+    public static void print_boards(char[][] ship_board, char[][] shots_board, int mode){
+        //print header based on mode
+        switch(mode){
+            case(0):
+                System.out.printf("%-37sShots:\n","Ships:");
+                break;
+            case(1):
+                System.out.printf("%-37sComputer Board:\n","Player7 Board:");
+                break;
+            default:
+                System.out.println("INVALID HEADER MODE");
+                break;
+        }
         //print the numbers at the top for ships
         System.out.print(" ");
         for(int i = 1; i<=SIZE; i++){
@@ -1162,6 +1294,8 @@ public class Battleship{
     -----
     Parameters:
     int game_over - the condition of the game end
+    char[][] p_board - the player's board to be printed if needed
+    char[][] c_board - the computer's board to be printed if needed
     -----
     Returns:
     void
@@ -1169,24 +1303,36 @@ public class Battleship{
     Description:
     Game_over will take the condition of the game's end and output a message based on it.
     */
-    public static void game_over_message(int game_over){
+    public static void game_over_message(int game_over, char[][] p_board, char[][] c_board){
         //output message based on game_over
         switch(game_over){
             //player loss
             case(1):
                 System.out.println("YOU LOST...");
+                System.out.println(); //blank line
+                print_boards(p_board, c_board, 1);
+                System.out.println(); //blank line
                 break;
             //player win
             case(2):
                 System.out.println("YOU WON!");
+                System.out.println(); //blank line
+                print_boards(p_board, c_board, 1);
+                System.out.println(); //blank line
                 break;
-            //player quit
+            //player quit out-of-game
             case(3):
                 //no special message
+                break;
+            //player quit in-game
+            case(4):
+                print_boards(p_board, c_board, 1);
+                System.out.println(); //blank line
                 break;
             //invalid game state
             default:
                 System.out.println("Invalid game state.");
+                System.out.println(); //blank line
                 break;
         }
         
