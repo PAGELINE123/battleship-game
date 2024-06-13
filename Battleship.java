@@ -64,6 +64,8 @@ public class Battleship{
         char[][] cpu_board = new char[SIZE][SIZE];
         char[][] player_shots = new char[SIZE][SIZE];
         char[][] cpu_shots = new char[SIZE][SIZE];
+        int[] player_hits = new char[NUM_SHIPS]; // 0 Destroyer, 1 Cruiser, 2 Submarine, 3 Battleship, 4 Aircraft Carrier
+        int[] cpu_hits = new char[NUM_SHIPS]; // 0 Destroyer, 1 Cruiser, 2 Submarine, 3 Battleship, 4 Aircraft Carrier
         int difficulty = 0; //0 default/easy, 1 normal
         String save_path = "";
         String user_choice = "";
@@ -155,6 +157,7 @@ public class Battleship{
                     //player quit out-of-game message
                     game_over = 4;
                     game_over_message(game_over, player_board, cpu_board);
+                    System.out.println(); //blank line
                 }
                 placing_ships = false;
             }
@@ -192,7 +195,7 @@ public class Battleship{
 
                     //shoot
                     if(user_choice.equals("1")){
-                        player_shoot(cpu_board, player_shots);
+                        player_shoot(cpu_board, player_shots, cpu_hits);
                         System.out.println(); //blank line
                         player_turn_passed = true; //proceed to next turn
                     }
@@ -262,7 +265,7 @@ public class Battleship{
 
                 //computer's turn, plays if the player succesfully completes their turn
                 if(player_turn_passed){
-                    cpu_shoot(player_board, cpu_shots, difficulty);
+                    cpu_shoot(player_board, cpu_shots, difficulty, player_hits);
                     System.out.println(); //blank line
                 }
 
@@ -687,6 +690,7 @@ public class Battleship{
     Parameters:
     char[][] c_board - the computer's board to be updated with a hit or miss cell
     char[][] p_shots - the player's shots used to keep track of what the player has shot
+    int[] c_hits - the hits on the computer's hits
     -----
     Returns:
     void
@@ -694,9 +698,10 @@ public class Battleship{
     Description:
     This method allows the player to shoot at a cooridinate they enter.
     If they hit or miss, both the computer board and player shots board are marked with a hit or miss cell respectively.
+    Updates c_hits if the player hits a ship.
     Uses pass-by-reference to make edits.
     */
-    public static void player_shoot(char[][] c_board, char[][] p_shots){
+    public static void player_shoot(char[][] c_board, char[][] p_shots, int[] c_hits){
         Scanner scan = new Scanner(System.in);
         
         //variables
@@ -745,6 +750,42 @@ public class Battleship{
             p_shots[row][col] = HIT_CELL;
             c_board[row][col] = HIT_CELL;
             System.out.println("HIT!");
+            
+            //update c_hits if one of the computer's ships were hit
+            switch(HIT_CELL){
+                case(DESTROYER_CELL):
+                    c_hits[0]++; //increment hits on destroyer by 1
+                    if(c_hits[0] == DESTROYER_SIZE){
+                        System.out.println("You sunk the computer's destroyer!");
+                    }
+                    break;
+                case(CRUISER_CELL):
+                    c_hits[1]++; //increment hits on cruiser by 1
+                    if(c_hits[1] == CRUISER_SIZE){
+                        System.out.println("You sunk the computer's cruiser!");
+                    }
+                    break;
+                case(SUBMARINE_CELL):
+                    c_hits[2]++; //increment hits on submarine by 1
+                    if(c_hits[2] == SUBMARINE_SIZE){
+                        System.out.println("You sunk the computer's submarine!");
+                    }
+                    break;
+                case(BATLESHIP_CELL):
+                    c_hits[3]++; //increment hits on battleship by 1
+                    if(c_hits[3] == BATTLESHIP_SIZE){
+                        System.out.println("You sunk the computer's battleship!");
+                    }
+                    break;
+                case(AIR_CARRIER_CELL):
+                    c_hits[4]++; //increment hits on aircraft carrier by 1
+                    if(c_hits[4] == AIR_CARRIER_SIZE){
+                        System.out.println("You sunk the computer's aircraft carrier!");
+                    }
+                    break;
+                default:
+                    break;
+            }
         }else{
             p_shots[row][col] = MISS_CELL;
             c_board[row][col] = MISS_CELL;
@@ -761,6 +802,7 @@ public class Battleship{
     char[][] p_board - the player's board to be updated with a hit or miss cell
     char[][] c_shots - the computer's shots used to keep track of what the computer shot
     int difficulty - the difficulty of the computer, at higher difficulties implement a different method of shooting
+    int[] p_hits - the hits on the player's ships
     -----
     Returns:
     void
@@ -770,9 +812,10 @@ public class Battleship{
     At difficulty 0 (easy), generates a random row and column and attempts to shoot at those coordinates.
     If the computer already shot at those coordinates, it will generate another row and column until it is a valid spot to hit.
     At difficulty 1 (normal), the computer will shoot around a spot that it hit until it sinks a ship, and will randomly generate a shot when there are no leads to pursue.
+    Updates p_hits if the computer hits a ship.
     Uses pass-by-reference to make edits.
     */
-    public static void cpu_shoot(char[][] p_board, char[][] c_shots, int difficulty){
+    public static void cpu_shoot(char[][] p_board, char[][] c_shots, int difficulty, int p_hits){
         Random rand = new Random();
         
         //variables
@@ -804,6 +847,42 @@ public class Battleship{
                     c_shots[row][col] = HIT_CELL;
                     p_board[row][col] = HIT_CELL;
                     System.out.println("HIT!");
+                    
+                    //update p_hits if one of the player's ships were hit
+                    switch(HIT_CELL){
+                        case(DESTROYER_CELL):
+                            p_hits[0]++; //increment hits on destroyer by 1
+                            if(p_hits == DESTROYER_SIZE){
+                                System.out.println("The computer sunk your destroyer!");
+                            }
+                            break;
+                        case(CRUISER_CELL):
+                            p_hits[1]++; //increment hits on cruiser by 1
+                            if(p_hits[1] == CRUISER_SIZE){
+                                System.out.println("The computer sunk your cruiser!");
+                            }
+                            break;
+                        case(SUBMARINE_CELL):
+                            p_hits[2]++; //increment hits on submarine by 1
+                            if(p_hits[2] == SUBMARINE_SIZE){
+                                System.out.println("The computer sunk your submarine!");
+                            }
+                            break;
+                        case(BATLESHIP_CELL):
+                            p_hits[3]++; //increment hits on battleship by 1
+                            if(p_hits[3] == BATLESHIP_SIZE){
+                                System.out.println("The computer sunk your battleship!");
+                            }
+                            break;
+                        case(AIR_CARRIER_CELL):
+                            p_hits[4]++; //increment hits on aircraft carrier by 1
+                            if(p_hits[4] == AIR_CARRIER_SIZE){
+                                System.out.println("The computer sunk your aircraft carrier!");
+                            }
+                            break;
+                        default:
+                            break;
+                    }
                 }else{
                     c_shots[row][col] = MISS_CELL;
                     p_board[row][col] = MISS_CELL;
@@ -833,6 +912,7 @@ public class Battleship{
     Description:
     This method loops through both p_board and c_board and checks if there are no more ships on a board.
     If the computer has no more ships, the player wins, and if the player has no ships, the player loses. If both still have ships, the game continues.
+    Also checks if any ships have been sunk in the turn and prints out a message if they have.
     Returns game_status as an indicator of game state.
     */
     public static int check_ships(char[][] p_board, char[][] c_board){
@@ -1236,7 +1316,7 @@ public class Battleship{
                 System.out.printf("%-37sShots:\n","Ships:");
                 break;
             case(1):
-                System.out.printf("%-37sComputer Board:\n","Player7 Board:");
+                System.out.printf("%-37sComputer Board:\n","Player Board:");
                 break;
             default:
                 System.out.println("INVALID HEADER MODE");
@@ -1308,26 +1388,30 @@ public class Battleship{
         switch(game_over){
             //player loss
             case(1):
+                System.out.println("********");
                 System.out.println("YOU LOST...");
+                System.out.println("********");
                 System.out.println(); //blank line
                 print_boards(p_board, c_board, 1);
                 System.out.println(); //blank line
                 break;
             //player win
             case(2):
+                System.out.println("********");
                 System.out.println("YOU WON!");
+                System.out.println("********");
                 System.out.println(); //blank line
+                print_boards(p_board, c_board, 1);
+                System.out.println(); //blank line
+                break;
+            //player quit in-game
+            case(3):
                 print_boards(p_board, c_board, 1);
                 System.out.println(); //blank line
                 break;
             //player quit out-of-game
-            case(3):
-                //no special message
-                break;
-            //player quit in-game
             case(4):
-                print_boards(p_board, c_board, 1);
-                System.out.println(); //blank line
+                //no special message
                 break;
             //invalid game state
             default:
