@@ -64,10 +64,12 @@ public class Battleship{
         char[][] cpu_board = new char[SIZE][SIZE];
         char[][] player_shots = new char[SIZE][SIZE];
         char[][] cpu_shots = new char[SIZE][SIZE];
-        int[] player_hits = new char[NUM_SHIPS]; // 0 Destroyer, 1 Cruiser, 2 Submarine, 3 Battleship, 4 Aircraft Carrier
-        int[] cpu_hits = new char[NUM_SHIPS]; // 0 Destroyer, 1 Cruiser, 2 Submarine, 3 Battleship, 4 Aircraft Carrier
+        int[] player_hits = new int[NUM_SHIPS]; // 0 Destroyer, 1 Cruiser, 2 Submarine, 3 Battleship, 4 Aircraft Carrier
+        int[] cpu_hits = new int[NUM_SHIPS]; // 0 Destroyer, 1 Cruiser, 2 Submarine, 3 Battleship, 4 Aircraft Carrier
+        String[][] cpu_shoot_logic = new String[][];
         int difficulty = 0; //0 default/easy, 1 normal
         String save_path = "";
+        String auto_save_path = "";
         String user_choice = "";
 
         program_running = true;
@@ -102,6 +104,7 @@ public class Battleship{
                 //load game
                 else if (user_choice.equals("2")) { 
                     save_path = new_save_path();
+                    auto_save_path = "AUTOSAVE_"+save_path;
                     System.out.println(); //blank line
 
                     System.out.println("Loading game...");
@@ -115,6 +118,10 @@ public class Battleship{
                     if(is_loaded(player_board) && is_loaded(cpu_board) && is_loaded(player_shots) && is_loaded(cpu_shots)){
                         System.out.println("Game successfully loaded.");
                         System.out.println(); //blank line
+                        
+                        //update player_hits and cpu_hits for loaded_file
+                        update_hits(player_board, cpu_board, player_hits, cpu_hits);
+                        
                         //do not enter ship placement phase if game is loaded, instead enter directly into game
                         game_running = true;
                         in_menu = false;
@@ -166,11 +173,15 @@ public class Battleship{
             if(game_running){
                 System.out.println("Enter the name of the file to save to.");
                 save_path = new_save_path();
+                auto_save_path = "AUTOSAVE_"+save_path;
                 System.out.println(); //blank line
             }
 
             //game loop
             while(game_running) {
+                //autosave on game loop start (mainly added for bug testing)
+                save_game(auto_save_path, player_board, cpu_board, player_shots, cpu_shots);
+                
                 //print boards visible to the player
                 print_boards(player_board, player_shots, 0);
                 System.out.println(); //blank line
@@ -195,7 +206,9 @@ public class Battleship{
 
                     //shoot
                     if(user_choice.equals("1")){
+                        System.out.println("Line 208 before method");
                         player_shoot(cpu_board, player_shots, cpu_hits);
+                        System.out.println("Line 210 after method");
                         System.out.println(); //blank line
                         player_turn_passed = true; //proceed to next turn
                     }
@@ -203,7 +216,7 @@ public class Battleship{
                     else if(user_choice.equals("2")){
                         System.out.println("Saving to "+save_path+"...");
                         save_game(save_path, player_board, cpu_board, player_shots, cpu_shots);
-                        System.out.println("Game succesfully saved.");
+                        System.out.println("Game successfully saved.");
                         System.out.println(); //blank line
                     }
                     //quit game and return to main menu
@@ -224,7 +237,7 @@ public class Battleship{
                             if(user_choice.equals("1")){
                                System.out.println("Saving to "+save_path+"...");
                                 save_game(save_path, player_board, cpu_board, player_shots, cpu_shots);
-                                System.out.println("Game succesfully saved.");
+                                System.out.println("Game successfully saved.");
                                 System.out.println(); //blank line
                                 game_over = 3; //change game_over to player exitted
                                 in_quit_menu = false;
@@ -263,7 +276,7 @@ public class Battleship{
                     }
                 } while(invalid_choice);
 
-                //computer's turn, plays if the player succesfully completes their turn
+                //computer's turn, plays if the player successfully completes their turn
                 if(player_turn_passed){
                     cpu_shoot(player_board, cpu_shots, difficulty, player_hits);
                     System.out.println(); //blank line
@@ -452,7 +465,7 @@ public class Battleship{
             else if(user_choice.equals("2")){
                 System.out.println("Randomly placing ships...");
                 p_board = random_place_ships(p_board);
-                System.out.println("Ships succesfully placed.");
+                System.out.println("Ships successfully placed.");
                 System.out.println(); //blank line
                 valid_choice = true;
             }
@@ -747,12 +760,10 @@ public class Battleship{
                 
         //check if the shot coordinates hit a ship cell, make it a hit cell if so and a miss cell if not
         if(c_board[row][col] == DESTROYER_CELL || c_board[row][col] == CRUISER_CELL || c_board[row][col] == SUBMARINE_CELL || c_board[row][col] == BATTLESHIP_CELL || c_board[row][col] == AIR_CARRIER_CELL){
-            p_shots[row][col] = HIT_CELL;
-            c_board[row][col] = HIT_CELL;
             System.out.println("HIT!");
             
             //update c_hits if one of the computer's ships were hit
-            switch(HIT_CELL){
+            switch(c_board[row][col]){
                 case(DESTROYER_CELL):
                     c_hits[0]++; //increment hits on destroyer by 1
                     if(c_hits[0] == DESTROYER_SIZE){
@@ -771,7 +782,7 @@ public class Battleship{
                         System.out.println("You sunk the computer's submarine!");
                     }
                     break;
-                case(BATLESHIP_CELL):
+                case(BATTLESHIP_CELL):
                     c_hits[3]++; //increment hits on battleship by 1
                     if(c_hits[3] == BATTLESHIP_SIZE){
                         System.out.println("You sunk the computer's battleship!");
@@ -784,8 +795,11 @@ public class Battleship{
                     }
                     break;
                 default:
+                    System.out.println("Invalid ship hit.");
                     break;
-            }
+                }
+                p_shots[row][col] = HIT_CELL;
+                c_board[row][col] = HIT_CELL;
         }else{
             p_shots[row][col] = MISS_CELL;
             c_board[row][col] = MISS_CELL;
@@ -815,7 +829,7 @@ public class Battleship{
     Updates p_hits if the computer hits a ship.
     Uses pass-by-reference to make edits.
     */
-    public static void cpu_shoot(char[][] p_board, char[][] c_shots, int difficulty, int p_hits){
+    public static void cpu_shoot(char[][] p_board, char[][] c_shots, int difficulty, int[] p_hits){
         Random rand = new Random();
         
         //variables
@@ -829,6 +843,8 @@ public class Battleship{
             case(0):
                 //keep generating shots if the computer already hit that cell
                 do{
+                    //reset invalid_shot on new shot
+                    invalid_shot = false;
                     //generate random coordinates to shoot from 0-9
                     row = rand.nextInt(SIZE);
                     col = rand.nextInt(SIZE);
@@ -844,15 +860,13 @@ public class Battleship{
                 
                 //check if the shot coordinates hit a ship cell, make it a hit cell if so and a miss cell if not
                 if(p_board[row][col] == DESTROYER_CELL || p_board[row][col] == CRUISER_CELL || p_board[row][col] == SUBMARINE_CELL || p_board[row][col] == BATTLESHIP_CELL || p_board[row][col] == AIR_CARRIER_CELL){
-                    c_shots[row][col] = HIT_CELL;
-                    p_board[row][col] = HIT_CELL;
                     System.out.println("HIT!");
                     
                     //update p_hits if one of the player's ships were hit
-                    switch(HIT_CELL){
+                    switch(p_board[row][col]){
                         case(DESTROYER_CELL):
                             p_hits[0]++; //increment hits on destroyer by 1
-                            if(p_hits == DESTROYER_SIZE){
+                            if(p_hits[0] == DESTROYER_SIZE){
                                 System.out.println("The computer sunk your destroyer!");
                             }
                             break;
@@ -868,9 +882,9 @@ public class Battleship{
                                 System.out.println("The computer sunk your submarine!");
                             }
                             break;
-                        case(BATLESHIP_CELL):
+                        case(BATTLESHIP_CELL):
                             p_hits[3]++; //increment hits on battleship by 1
-                            if(p_hits[3] == BATLESHIP_SIZE){
+                            if(p_hits[3] == BATTLESHIP_SIZE){
                                 System.out.println("The computer sunk your battleship!");
                             }
                             break;
@@ -881,8 +895,11 @@ public class Battleship{
                             }
                             break;
                         default:
+                            System.out.println("Invalid ship hit.");
                             break;
                     }
+                    c_shots[row][col] = HIT_CELL;
+                    p_board[row][col] = HIT_CELL;
                 }else{
                     c_shots[row][col] = MISS_CELL;
                     p_board[row][col] = MISS_CELL;
@@ -891,9 +908,22 @@ public class Battleship{
                 System.out.println("----");
                 
                 break;
+                
             //normal
             case(1):
-                //not implemented yet
+                //generate a random shot until a hit 
+                do{
+                    //reset invalid_shot on new shot
+                    invalid_shot = false;
+                    //generate random coordinates to shoot from 0-9
+                    row = rand.nextInt(SIZE);
+                    col = rand.nextInt(SIZE);
+                
+                    if((c_shots[row][col] == MISS_CELL) || (c_shots[row][col] == HIT_CELL)){
+                        invalid_shot = true;
+                    }
+                }while(invalid_shot);
+                
                 break;
         }
     }
@@ -904,7 +934,7 @@ public class Battleship{
     -----
     Parameters:
     char[][] p_board - the player's board to check for ship cells
-    char[][] c_shots - the computer's board to check for ship cells
+    char[][] c_board - the computer's board to check for ship cells
     -----
     Returns:
     int game_status - the status of the game; 0 game not over, 1 for player loss, 2 for player win
@@ -947,6 +977,103 @@ public class Battleship{
         }
         
         return game_status;
+    }
+    
+    /*
+    Method:
+    update_hits
+    -----
+    Parameters:
+    char[][] p_board - the player's board to check for ship cells
+    char[][] c_board - the computer's board to check for ship cells
+    -----
+    Returns:
+    void
+    -----
+    Description:
+    This method is called when a save file is loaded, and updates both player and cpu hit arrays to the proper amount of hits.
+    Calculates hits by checking how many ship cells of each ship remain on the board and subtracting it by the ship’s size.
+    This method is only called when a save file is loaded, as every other update to the hit arrays are done on player/computer shoot.
+    This method uses pass-by-reference to make edits.
+    */
+    public static void update_hits(char[][] p_board, char[][] c_board, int[] p_hits, int[] c_hits){
+        //variables
+        int[] p_ships = new int[NUM_SHIPS];
+        int[] c_ships = new int[NUM_SHIPS];
+        int curr_ship_size = 0;
+      
+        //loop through boards
+        for(int i = 0; i<SIZE; i++){
+            for(int j = 0; j<SIZE; j++){
+                //increment p_ships if the current cell is a ship cell
+                switch(p_board[i][j]){
+                    case(DESTROYER_CELL):
+                        p_ships[0]++;
+                        break;
+                    case(CRUISER_CELL):
+                        p_ships[1]++;
+                        break;
+                    case(SUBMARINE_CELL):
+                        p_ships[2]++;
+                        break;
+                    case(BATTLESHIP_CELL):
+                        p_ships[3]++;
+                        break;
+                    case(AIR_CARRIER_CELL):
+                        p_ships[4]++;
+                        break;
+                    //no default, pass if not matching a ship cell
+                }
+                        
+                //increment c_ships if the current cell is a ship cell
+                switch(c_board[i][j]){
+                    case(DESTROYER_CELL):
+                        c_ships[0]++;
+                        break;
+                    case(CRUISER_CELL):
+                        c_ships[1]++;
+                        break;
+                    case(SUBMARINE_CELL):
+                        c_ships[2]++;
+                        break;
+                    case(BATTLESHIP_CELL):
+                        c_ships[3]++;
+                        break;
+                    case(AIR_CARRIER_CELL):
+                        c_ships[4]++;
+                        break;
+                    //no default, pass if not matching a ship cell
+                }
+            }
+        }
+        
+        //update hits
+        for(int i = 0; i<NUM_SHIPS; i++){
+            //get size of ship to be checked
+            switch(i){
+                case(0):
+                    curr_ship_size = DESTROYER_SIZE;
+                    break;
+                case(1):
+                    curr_ship_size = CRUISER_SIZE;
+                    break;
+                case(2):
+                    curr_ship_size = SUBMARINE_SIZE;
+                    break;
+                case(3):
+                    curr_ship_size = BATTLESHIP_SIZE;
+                    break;
+                case(4):
+                    curr_ship_size = AIR_CARRIER_SIZE;
+                    break;
+                default:
+                    System.out.println("Ship to be checked out of bounds.");
+                    break;
+            }
+            //update hits based on cells remaining of each ship
+            p_hits[i] = curr_ship_size - p_ships[i];
+            c_hits[i] = curr_ship_size - c_ships[i];
+        }
     }
     
     /*
