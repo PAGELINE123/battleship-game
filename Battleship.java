@@ -6,9 +6,9 @@ Programmer:
 Mansour Abdelsalam
 -----
 Date finished:
-
+2024-06-15
 -----
-Description: 
+Description:
 
 */
 
@@ -19,6 +19,7 @@ import java.util.InputMismatchException;
 
 public class Battleship{
     //global constants for readability
+    static final String SEPARATION_LINE = "-------------------------------------------------------------------";
     static final int SIZE = 10;
     static final int PLAYER_BOARD = 1;
     static final int CPU_BOARD = 2;
@@ -29,12 +30,11 @@ public class Battleship{
     static final String VERTICAL = "V";
 
     //normal mode constants for indexing
-    static final int CPU_LOGIC_ITEMS = 5;
+    static final int CPU_LOGIC_ITEMS = 4;
     static final int CPU_PRIORITY = 0;
-    static final int CPU_TRACK_ORIENTATION = 1;
-    static final int CPU_DIRECTION = 2;
-    static final int CPU_ROOT = 3;
-    static final int CPU_SHOOTING = 4;
+    static final int CPU_DIRECTION = 1;
+    static final int CPU_ROOT = 2;
+    static final int CPU_SHOOTING = 3;
     static final int DIMENSIONS = 2;
 
     //cell chars
@@ -61,6 +61,9 @@ public class Battleship{
     //main method
     public static void main(String[] args){
         Scanner scan = new Scanner(System.in);
+
+        //debug mode (enables printing of cpu logic items in normal mode)
+        boolean debug_mode = false;
 
         //variables
         boolean program_running = false;
@@ -92,6 +95,10 @@ public class Battleship{
             in_menu = true;
             //reset game over state on program loop start
             game_over = 0;
+
+            //separation line
+            System.out.println(SEPARATION_LINE);
+            System.out.println(); //blank line
 
             //display options for game
             System.out.println("BATTLESHIP GAME by Mansour");
@@ -151,6 +158,10 @@ public class Battleship{
                 else if (user_choice.equals("4")){
                     System.out.println("Exiting program...");
                     System.out.println(); //blank line
+                    //separation line
+                    System.out.println(SEPARATION_LINE);
+                    System.out.println(); //blank line
+
                     program_running = false;
                     in_menu = false;
                 }
@@ -162,6 +173,10 @@ public class Battleship{
 
             //player and cpu place boards
             if(placing_ships){
+                //separation line
+                System.out.println(SEPARATION_LINE);
+                System.out.println(); //blank line
+
                 player_place_ships(player_board);
                 random_place_ships(cpu_board);
                 
@@ -182,6 +197,10 @@ public class Battleship{
             
             //things to be set before game start
             if(game_running){
+                //separation line
+                System.out.println(SEPARATION_LINE);
+                System.out.println(); //blank line
+
                 //get save path
                 System.out.println("Enter the name of the file to save to.");
                 save_path = new_save_path();
@@ -227,12 +246,18 @@ public class Battleship{
 
             //game loop
             while(game_running) {
+                //separation line
+                System.out.println(SEPARATION_LINE);
+                System.out.println(); //blank line
 
-                for(int i = 0; i<CPU_LOGIC_ITEMS; i++){
-                    System.out.println(cpu_shoot_logic[i]);
+                //print out logic items
+                if(debug_mode){
+                    for(int i = 0; i<CPU_LOGIC_ITEMS; i++){
+                        System.out.println(cpu_shoot_logic[i]);
+                    }
+                    System.out.println(); //blank line
                 }
                 
-
                 //autosave on game loop start (mainly added for bug testing)
                 save_game(auto_save_path, player_board, cpu_board, player_shots, cpu_shots);
                 
@@ -479,18 +504,24 @@ public class Battleship{
                             row = scan.nextInt();
                             System.out.print("Enter column number: ");
                             col = scan.nextInt();
+                            System.out.println(); //blank line
                         }catch(InputMismatchException e){
                             invalid_input = true;
                             System.out.println("Invalid input. Row and column numbers must be whole numbers.");
+                            System.out.println(); //blank line
                         }
                         scan.nextLine(); //remove new line character from input stream
                         
-                        System.out.print("Enter orientation (\"H\" or \"V\"): ");
-                        orientation = scan.nextLine();
-                        
-                        if((!orientation.toUpperCase().equals(VERTICAL)) && (!orientation.toUpperCase().equals(HORIZONTAL))){
-                            invalid_input = true;
-                            System.out.println("Invalid input. Orientation must be \"H\" or \"V\"");
+                        if(!invalid_input){
+                            System.out.print("Enter orientation (\"H\" or \"V\"): ");
+                            orientation = scan.nextLine();
+                            orientation = orientation.toUpperCase();
+                            
+                            if((!orientation.equals(VERTICAL)) && (!orientation.equals(HORIZONTAL))){
+                                invalid_input = true;
+                                System.out.println("Invalid input. Orientation must be \"H\" or \"V\"");
+                                System.out.println(); //blank line
+                            }
                         }
                         
                         if(!invalid_input){
@@ -501,15 +532,14 @@ public class Battleship{
                             if(is_valid_placement(p_board, row, col, orientation, ship_size, true)){
                                 valid_placement = true;
                             }else{
-                                System.out.println("Please re-place your ship.");
+                                System.out.println(); //blank line
                             }
                         }
-                        
-                        System.out.println(); //blank line
                     } while(!valid_placement);
             
                     //place the ship
                     p_board = place_ship(p_board, row, col, orientation, ship_size, ship_cell);
+                    System.out.println(); //blank line
                 }
                 System.out.println("Ships successfully placed.");
                 System.out.println(); //blank line
@@ -799,10 +829,15 @@ public class Battleship{
                     System.out.println("You have already shot at that cell. ");
                 }
                 if(invalid_shot){
+                    System.out.println(); //blank line
                     System.out.println("Reenter coordinates: ");
                 }
             } catch (InputMismatchException e){
+                invalid_shot = true;
                 System.out.println("Invalid input. Row and column numbers must be whole numbers.");
+                System.out.println(); //blank line
+                System.out.println("Reenter coordinates: ");
+                scan.next(); //remove invalid input from input stream
             }
         }while(invalid_shot);
                 
@@ -892,13 +927,17 @@ public class Battleship{
         int row = 0;
         int col = 0;
         //only used in normal mode
+        boolean sunk_ship = false;
         String[] coordinates = new String[DIMENSIONS];
         int next_row = 0;
         int next_col = 0;
+        int root_row = 0;
+        int root_col = 0;
       
-        //different diffiulties
+        //how the computer generates its row and column based on difficulty
         switch(difficulty){
             //easy
+            //generate random row and column number
             case(0):
                 //keep generating shots if the computer already hit that cell
                 do{
@@ -915,8 +954,9 @@ public class Battleship{
                 
                 break;
             //normal
+            //generate random row and column number, use priority shot if available
             case(1):
-                
+                //shoot at a random row and column number if not tracking a ship to shoot
                 if(logic[CPU_SHOOTING].equals("idle")){
                     do{
                         //reset invalid_shot on new shot
@@ -928,37 +968,17 @@ public class Battleship{
                         if((c_shots[row][col] == MISS_CELL) || (c_shots[row][col] == HIT_CELL)){
                             invalid_shot = true;
                         }
-                    }while(invalid_shot);
-
-                    System.out.println("Line 933 "+row+" "+col);
-
-                    if(p_board[row][col] == DESTROYER_CELL || p_board[row][col] == CRUISER_CELL || p_board[row][col] == SUBMARINE_CELL || p_board[row][col] == BATTLESHIP_CELL || p_board[row][col] == AIR_CARRIER_CELL){
-                        //start shooting at a new ship
-                        logic[CPU_SHOOTING] = "shooting";
-                        logic[CPU_ROOT] = ""+row+","+col;
-                        logic[CPU_TRACK_ORIENTATION] = HORIZONTAL;
-                        logic[CPU_DIRECTION] = "right";
-                        
-                        next_row = row;
-                        next_col = col+1;
-
-                        if(next_row >= SIZE){
-                            logic[CPU_DIRECTION] = "left";
-                            next_row = row;
-                            next_col = col-1;
-                        }
-                        logic[CPU_PRIORITY] = ""+next_row+","+next_col;
-                    }
+                    }while(invalid_shot);   
                 }else{
+                    //set up shot based on priority shot
                     coordinates = logic[CPU_PRIORITY].split(",");
                     row = Integer.parseInt(coordinates[0]);
                     col = Integer.parseInt(coordinates[1]);
 
-                    if(logic[CPU_DIRECTION].equals("right")){
-                        next_row = Integer.parseInt(coordinates[0]);
-                        next_col = Integer.parseInt(coordinates[1]);
-                        logic[CPU_PRIORITY] = ""+next_row+","+next_col;
-                    }
+                    //define root coordinates of ship
+                    coordinates = logic[CPU_ROOT].split(",");
+                    root_row = Integer.parseInt(coordinates[0]);
+                    root_col = Integer.parseInt(coordinates[1]);
                 }
                 
                 break;
@@ -971,7 +991,7 @@ public class Battleship{
             miss = true;
         }
 
-        //output shot message
+        //output shot message and check if a ship was sunk
         System.out.println("The computer shot at:");
         System.out.println("Row "+(row+1)+", Column "+(col+1));
         System.out.println("----");
@@ -984,36 +1004,42 @@ public class Battleship{
                     p_hits[0]++; //increment hits on destroyer by 1
                     if(p_hits[0] == DESTROYER_SIZE){
                         System.out.println("The computer sunk your destroyer!");
+                        sunk_ship = true;
                     }
                     break;
                 case(CRUISER_CELL):
                     p_hits[1]++; //increment hits on cruiser by 1
                     if(p_hits[1] == CRUISER_SIZE){
                         System.out.println("The computer sunk your cruiser!");
+                        sunk_ship = true;
                     }
                     break;
                 case(SUBMARINE_CELL):
                     p_hits[2]++; //increment hits on submarine by 1
                     if(p_hits[2] == SUBMARINE_SIZE){
                         System.out.println("The computer sunk your submarine!");
+                        sunk_ship = true;
                     }
                     break;
                 case(BATTLESHIP_CELL):
                     p_hits[3]++; //increment hits on battleship by 1
                     if(p_hits[3] == BATTLESHIP_SIZE){
                         System.out.println("The computer sunk your battleship!");
+                        sunk_ship = true;
                     }
                     break;
                 case(AIR_CARRIER_CELL):
                     p_hits[4]++; //increment hits on aircraft carrier by 1
                     if(p_hits[4] == AIR_CARRIER_SIZE){
                         System.out.println("The computer sunk your aircraft carrier!");
+                        sunk_ship = true;
                     }
                     break;
                 default:
                     System.out.println("Invalid ship hit.");
                     break;
             }
+            //update c_shots and p_board
             c_shots[row][col] = HIT_CELL;
             p_board[row][col] = HIT_CELL;
         }else if(miss){
@@ -1022,6 +1048,93 @@ public class Battleship{
             System.out.println("MISS");
         }
         System.out.println("----");
+
+        //determine next priority shot/what to do based on hit or miss given current data
+        if(difficulty == 1){
+            if(hit){
+                if(sunk_ship){
+                    //reset computer logic, try and find another ship next shot
+                    reset_logic(logic);
+                }
+                //if a ship is hit when the computer is idle, begin tracking the ship and change logic[CPU_SHOOTING] to "shooting"
+                else if(logic[CPU_SHOOTING].equals("idle")){
+                    //start shooting at a new ship
+                    logic[CPU_SHOOTING] = "shooting";
+                    logic[CPU_ROOT] = ""+row+","+col;
+                    logic[CPU_DIRECTION] = "right";
+
+                    //define root coordinates of ship
+                    coordinates = logic[CPU_ROOT].split(",");
+                    root_row = Integer.parseInt(coordinates[0]);
+                    root_col = Integer.parseInt(coordinates[1]);
+                }
+            }
+
+            //if out of bounds in the direction or is going to hit a cell already hit, check in other directions and shoot in a valid direction
+            //shooting and checking direction order is: right -> left -> up -> down
+            if(logic[CPU_DIRECTION].equals("up")){
+                if(hit){ //keep going in the direction if something is hit
+                    next_row = row-1;
+                    next_col = col;
+                }
+                if(miss || next_row < 0 || (p_board[next_row][next_col] == HIT_CELL || p_board[next_row][next_col] == MISS_CELL)){ // change to next direction in order if miss/out of bounds/already hit
+                    logic[CPU_DIRECTION] = "down";
+                    next_row = root_row+1;
+                    next_col = root_col;
+                }
+            }
+            else if(logic[CPU_DIRECTION].equals("down")){
+                if(hit){
+                    next_row = row+1;
+                    next_col = col;
+                }
+                if(miss || next_row == SIZE || (p_board[next_row][next_col] == HIT_CELL || p_board[next_row][next_col] == MISS_CELL)){
+                    System.out.println("CPU must have sunk a ship at this point.");
+                }
+            }
+            else if(logic[CPU_DIRECTION].equals("left")){
+                if(hit){
+                    next_row = row;
+                    next_col = col-1;
+                }
+                if(miss || next_col < 0 || (p_board[next_row][next_col] == HIT_CELL || p_board[next_row][next_col] == MISS_CELL)){
+                    logic[CPU_DIRECTION] = "up";
+                    next_row = root_row-1;
+                    next_col = root_col;
+                    if(next_row < 0 || (p_board[next_row][next_col] == HIT_CELL || p_board[next_row][next_col] == MISS_CELL)){
+                        logic[CPU_DIRECTION] = "down";
+                        next_row = root_row+1;
+                        next_col = root_col;
+                    }
+                }
+            }
+            else if(logic[CPU_DIRECTION].equals("right")){
+                if(hit){
+                    next_row = row;
+                    next_col = col+1;
+                }
+                if(miss || next_col == SIZE || (p_board[next_row][next_col] == HIT_CELL || p_board[next_row][next_col] == MISS_CELL)){
+                    logic[CPU_DIRECTION] = "left";
+                    next_row = root_row;
+                    next_col = root_col-1;
+                    if(next_col < 0 || (p_board[next_row][next_col] == HIT_CELL || p_board[next_row][next_col] == MISS_CELL)){
+                        logic[CPU_DIRECTION] = "up";
+                        next_row = root_row-1;
+                        next_col = root_col;
+                        if(next_row < 0 || (p_board[next_row][next_col] == HIT_CELL || p_board[next_row][next_col] == MISS_CELL)){
+                            logic[CPU_DIRECTION] = "down";
+                            next_row = root_row+1;
+                            next_col = root_col;
+                        }
+                    }
+                }
+            }
+
+            //set the priority shot to the next row and next column if the computer is currently shooting
+            if(logic[CPU_SHOOTING].equals("shooting")){
+                logic[CPU_PRIORITY] = ""+next_row+","+next_col;
+            }
+        }
     }
     
     /*
@@ -1738,8 +1851,8 @@ public class Battleship{
         System.out.println("You and the computer take turns firing shots at each others' ships.");
         System.out.println("Enter the coordinates for your shot when it's your turn.");
         System.out.println("Example:");
-        System.out.println("Row: 5");
-        System.out.println("Column: 4");
+        System.out.println("ROW: 5");
+        System.out.println("COL: 4");
         System.out.println();
 
         System.out.println("Checking Shots:");
