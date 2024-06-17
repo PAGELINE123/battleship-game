@@ -9,7 +9,31 @@ Date finished:
 2024-06-15
 -----
 Description:
+Program that plays a game of Battleship against a computer.
 
+In the main menu, the player has the ability to start a new game, load a game from and old save, view instructions on how to play Battleship, and exit the program.
+This program uses text files to save and load game states.
+
+If the player starts a new game, they must place their own ships.
+When the game starts from  either loading or starting a new game, the player can choose a difficulty for the computer.
+The player must also enter the name of the file to save to.
+The computer has two difficulties; easy mode and normal mode.
+In easy mode, the computer shoots at a randomly chosen cell.
+In normal mode, the computer shoots randomly until it gets a hit. From there it can track one ship and attempt to shoot at it until it sinks.
+
+During the game, the player can choose to shoot, save the game, or quit the game.
+When either side takes a shot, the shot's row and column number is printed.
+If the shot sinks a ship, a message printing who sunk the ship and what ship was sunk is printed.
+
+When the game ends on a player/computer loss, an appropriate ending message is printed. If the player quits, no special message is printed.
+Both player and computer boards are printed when a game ends.
+After the game ends, the player returns to the main menu.
+
+Other features:
+Autosave
+Choice to randomly place your own ships
+Cannot crash from attempting to load a corrupted/altered save file
+Cannot crash or get stuck in general
 */
 
 import java.io.*;
@@ -349,7 +373,7 @@ public class Battleship{
                         } while(in_quit_menu);
                     } else {
                         //invalid choice if user_choice does not match any option
-                        System.out.println("Invalid input. Please enter a number between 1 and 4.");
+                        System.out.println("Invalid input. Please enter a number between 1 and 3.");
                         invalid_choice = true;
                     }
                 } while(invalid_choice);
